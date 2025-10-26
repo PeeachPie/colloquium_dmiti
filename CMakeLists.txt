@@ -31,3 +31,6 @@ file(GLOB SOURCES
 
 add_executable(app ${SOURCES})
 target_compile_features(app PRIVATE cxx_std_20)
+
+enable_testing()
+add_subdirectory(tst)
