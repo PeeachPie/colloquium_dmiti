@@ -67,12 +67,21 @@ TEST(IntegerArithmetic, AddSub) {
     EXPECT_EQ(Integer("-10").ADD_ZZ_Z(Integer("-5")).as_string(), "-15");
     EXPECT_EQ(Integer("-10").SUB_ZZ_Z(Integer("5")).as_string(), "-15");
     EXPECT_EQ(Integer("1000").SUB_ZZ_Z(Integer("1000")).as_string(), "0");
+    
+    EXPECT_EQ(Integer("0").ADD_ZZ_Z(Integer("0")).as_string(), "0");
+    EXPECT_EQ(Integer("0").ADD_ZZ_Z(Integer("5")).as_string(), "5");
+    EXPECT_EQ(Integer("5").ADD_ZZ_Z(Integer("0")).as_string(), "5");
+    EXPECT_EQ(Integer("0").SUB_ZZ_Z(Integer("5")).as_string(), "-5");
+    EXPECT_EQ(Integer("5").SUB_ZZ_Z(Integer("0")).as_string(), "5");
 }
 
 TEST(IntegerArithmetic, Mul) {
     EXPECT_EQ(Integer("0").MUL_ZZ_Z(Integer("123")).as_string(), "0");
     EXPECT_EQ(Integer("12").MUL_ZZ_Z(Integer("-3")).as_string(), "-36");
     EXPECT_EQ(Integer("-12").MUL_ZZ_Z(Integer("-3")).as_string(), "36");
+    EXPECT_EQ(Integer("1").MUL_ZZ_Z(Integer("1")).as_string(), "1");
+    EXPECT_EQ(Integer("-1").MUL_ZZ_Z(Integer("1")).as_string(), "-1");
+    EXPECT_EQ(Integer("-1").MUL_ZZ_Z(Integer("-1")).as_string(), "1");
 }
 
 TEST(IntegerArithmetic, DivMod) {
@@ -90,5 +99,24 @@ TEST(IntegerArithmetic, DivMod) {
 
     EXPECT_THROW(Integer("5").DIV_ZZ_Z(Integer("0")), std::invalid_argument);
     EXPECT_THROW(Integer("5").MOD_ZZ_Z(Integer("0")), std::invalid_argument);
+    
+    EXPECT_EQ(Integer("0").DIV_ZZ_Z(Integer("5")).as_string(), "0");
+    EXPECT_EQ(Integer("0").MOD_ZZ_Z(Integer("5")).as_string(), "0");
+    EXPECT_EQ(Integer("5").DIV_ZZ_Z(Integer("5")).as_string(), "1");
+    EXPECT_EQ(Integer("5").MOD_ZZ_Z(Integer("5")).as_string(), "0");
+}
+
+TEST(IntegerArithmetic, LargeNumbers) {
+    Integer large1("12345678901234567890");
+    Integer large2("98765432109876543210");
+    
+    EXPECT_EQ(large1.ADD_ZZ_Z(Integer("0")).as_string(), "12345678901234567890");
+    EXPECT_EQ(large1.SUB_ZZ_Z(large1).as_string(), "0");
+    
+    EXPECT_NO_THROW(large1.ADD_ZZ_Z(large2));
+    EXPECT_NO_THROW(large1.SUB_ZZ_Z(large2));
+    EXPECT_NO_THROW(large1.MUL_ZZ_Z(large2));
+    EXPECT_NO_THROW(large1.DIV_ZZ_Z(large2));
+    EXPECT_NO_THROW(large1.MOD_ZZ_Z(large2));
 }
 

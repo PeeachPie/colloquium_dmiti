@@ -174,37 +174,37 @@ Natural Integer::TRANS_Z_N() const {
 }
 
 Integer Integer::ADD_ZZ_Z(const Integer& other) const {
-    const std::string a = this->Natural::as_string();
-    const std::string b = other.Natural::as_string();
+    Natural abs_this = this->ABS_Z_N();
+    Natural abs_other = other.ABS_Z_N();
     bool sa = this->s_;
     bool sb = other.s_;
 
-    if (a == "0") {
-        return Integer((sb ? std::string("-") : std::string("")) + b);
+    if (abs_this.as_string() == "0") {
+        return Integer(other.as_string());
     }
-    if (b == "0") {
-        return Integer((sa ? std::string("-") : std::string("")) + a);
+    if (abs_other.as_string() == "0") {
+        return Integer(this->as_string());
     }
 
-    std::string res_abs;
+    Natural res_abs;
     bool res_neg = false;
     if (sa == sb) {
-        res_abs = add_abs_str(a, b);
+        res_abs = abs_this.ADD_NN_N(abs_other);
         res_neg = sa;
     } else {
-        int cmp = compare_abs_str(a, b);
+        int cmp = abs_this.COM_NN_D(abs_other);
         if (cmp == 0) {
             return Integer("0");
-        } else if (cmp > 0) {
-            res_abs = sub_abs_str_geq(a, b);
+        } else if (cmp == 2) {
+            res_abs = abs_this.SUB_NN_N(abs_other);
             res_neg = sa;
         } else {
-            res_abs = sub_abs_str_geq(b, a);
+            res_abs = abs_other.SUB_NN_N(abs_this);
             res_neg = sb;
         }
     }
-    if (res_abs == "0") return Integer("0");
-    return Integer((res_neg ? std::string("-") : std::string("")) + res_abs);
+    if (res_abs.as_string() == "0") return Integer("0");
+    return Integer((res_neg ? std::string("-") : std::string("")) + res_abs.as_string());
 }
 
 Integer Integer::SUB_ZZ_Z(const Integer& other) const {
@@ -216,45 +216,79 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const {
 }
 
 Integer Integer::MUL_ZZ_Z(const Integer& other) const {
-    const std::string a = this->Natural::as_string();
-    const std::string b = other.Natural::as_string();
-    if (a == "0" || b == "0") return Integer("0");
-    std::string prod = mul_abs_str(a, b);
-    bool neg = (this->s_ != other.s_);
-    return Integer((neg ? std::string("-") : std::string("")) + prod);
+    Natural abs_this = this->ABS_Z_N();
+    Natural abs_other = other.ABS_Z_N();
+    
+    if (abs_this.as_string() == "0" || abs_other.as_string() == "0") {
+        return Integer("0");
+    }
+    
+    try {
+        Natural prod = abs_this.MUL_NN_N(abs_other);
+        bool neg = (this->s_ != other.s_);
+        return Integer((neg ? std::string("-") : std::string("")) + prod.as_string());
+    } catch (...) {
+        throw std::logic_error("MUL_NN_N не реализован в Natural");
+    }
 }
 
 Integer Integer::DIV_ZZ_Z(const Integer& other) const {
-    const std::string a = this->Natural::as_string();
-    const std::string b = other.Natural::as_string();
-    if (b == "0") throw std::invalid_argument("Деление на ноль");
-    if (a == "0") return Integer("0");
-    auto [q0, r0] = divmod_abs_str(a, b);
-    bool signs_diff = (this->s_ != other.s_);
-    if (!signs_diff) {
-        return Integer((this->s_ ? std::string("-") : std::string("")) + q0);
-    } else {
-        if (r0 == "0") {
-            return Integer(std::string("-") + q0);
+    Natural abs_this = this->ABS_Z_N();
+    Natural abs_other = other.ABS_Z_N();
+    
+    if (abs_other.as_string() == "0") {
+        throw std::invalid_argument("Деление на ноль");
+    }
+    if (abs_this.as_string() == "0") {
+        return Integer("0");
+    }
+    
+    try {
+        Natural q0 = abs_this.DIV_NN_N(abs_other);
+        bool signs_diff = (this->s_ != other.s_);
+        
+        if (!signs_diff) {
+            return Integer((this->s_ ? std::string("-") : std::string("")) + q0.as_string());
+        } else {
+            Natural r0 = abs_this.MOD_NN_N(abs_other);
+            if (r0.as_string() == "0") {
+                return Integer(std::string("-") + q0.as_string());
+            } else {
+                Natural q_inc = q0.ADD_1N_N();
+                return Integer(std::string("-") + q_inc.as_string());
+            }
         }
-        std::string q_inc = add_abs_str(q0, "1");
-        return Integer(std::string("-") + q_inc);
+    } catch (...) {
+        throw std::logic_error("DIV_NN_N не реализован в Natural");
     }
 }
 
 Integer Integer::MOD_ZZ_Z(const Integer& other) const {
-    const std::string a = this->Natural::as_string();
-    const std::string b = other.Natural::as_string();
-    if (b == "0") throw std::invalid_argument("Деление на ноль");
-    if (a == "0") return Integer("0");
-    auto [q0, r0] = divmod_abs_str(a, b);
-    bool signs_diff = (this->s_ != other.s_);
-    if (!signs_diff) {
-        return Integer(r0);
-    } else {
-        if (r0 == "0") return Integer("0");
-        std::string bb = strip_leading_zeros(b);
-        std::string rr = sub_abs_str_geq(bb, r0);
-        return Integer(rr);
+    Natural abs_this = this->ABS_Z_N();
+    Natural abs_other = other.ABS_Z_N();
+    
+    if (abs_other.as_string() == "0") {
+        throw std::invalid_argument("Деление на ноль");
+    }
+    if (abs_this.as_string() == "0") {
+        return Integer("0");
+    }
+    
+    try {
+        Natural r0 = abs_this.MOD_NN_N(abs_other);
+        bool signs_diff = (this->s_ != other.s_);
+        
+        if (!signs_diff) {
+            return Integer(r0.as_string());
+        } else {
+            if (r0.as_string() == "0") {
+                return Integer("0");
+            } else {
+                Natural rr = abs_other.SUB_NN_N(r0);
+                return Integer(rr.as_string());
+            }
+        }
+    } catch (...) {
+        throw std::logic_error("MOD_NN_N не реализован в Natural");
     }
 }
