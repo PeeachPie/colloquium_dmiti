@@ -22,10 +22,13 @@ public:
     Natural ABS_Z_N() const;
     
     // Z-2 Определение положительности числа (2 - положительное, 0 — равное нулю, 1 - отрицательное)
-    int POZ_Z_D() const;
+    // замена на предложенный вариант SGN_Z_D (1 - положительное, 0 - равное нулю,  -1 - отрицательное)
+    //int POZ_Z_D() const;
+    int SGN_Z_D() const;
     
     // Z-3 Умножение целого на (-1)
-    Integer& MUL_ZM_Z();
+    // (?) тут опечатка с Integer& ?? я заменила на Integer, и добавила const
+    Integer MUL_ZM_Z() const; 
     
     // Z-4 Преобразование натурального в целое
     Integer TRANS_N_Z(const Natural& natural);
