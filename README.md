@@ -55,3 +55,10 @@ Test project /colloquium_dmiti/build
 
 Total Test time (real) =   0.01 sec
 ```
+
+### Запуск тестов 2
+
+Чтобы вывести логи тестов введите эту команду
+```bash
+ctest --rerun-failed --output-on-failure
+```
