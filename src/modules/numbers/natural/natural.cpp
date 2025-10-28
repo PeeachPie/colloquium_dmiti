@@ -124,7 +124,7 @@ Natural Natural::SUB_NN_N(const Natural& other) const{
 //N-6
 Natural Natural::MUL_ND_N(int digit) const{
     if(digit > 10 || digit < 0) {
-        throw std::invalid_argument("Множитель не может быть отрицательным и >= 9");
+        throw std::invalid_argument("Множитель должен находиться в пределах от 0 до 9"");
     }
 
     if(digit == 0 || (n_ == 0 && a_[0] == '0')) return Natural();
