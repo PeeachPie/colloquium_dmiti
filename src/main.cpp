@@ -6,9 +6,10 @@
 #include "polynomial.hpp"
 
 int main() {
-    Natural a; // a = 0
-    Natural b = Natural("000001234"); // b = 1234
+    Natural a = Natural("893"); // a = 893
+    Natural b = Natural("0000010"); // b = 100
     // Natural c = Natural("lol"); // ошибка
 
     std::cout << a << ' ' << b << '\n';
+    std::cout<<b.COM_NN_D(a)<<'\n';
 }
