@@ -151,7 +151,7 @@ Natural Natural::MUL_ND_N(int digit) const
     int transfer = 0;
     int i = 0;
 
-    for (; i < n_; i++) {
+    for (; i <= n_; i++) {
         int num = (a_[i] - '0') * digit + transfer;
         transfer = num / 10;
         char dig = (num % 10) + '0';
@@ -186,7 +186,7 @@ Natural Natural::MUL_Nk_N(int k) const {
 Natural Natural::MUL_NN_N(const Natural &other) const {
     Natural result;
 
-    for (int i = 0; i < other.n_; i++) {
+    for (int i = 0; i <= other.n_; i++) {
         // переменная, которая будет содержать результат умножения
         // числа на текущую цифру другого числа с поправкой на разряд цифры
         Natural step = this->MUL_ND_N(other.a_[i] - '0'); // умножаем число на текущую цифру другого числа
@@ -211,6 +211,10 @@ Natural Natural::SUB_NDN_N(const Natural &other, int digit) const {
 
 // N-10
 std::pair<int, int> Natural::DIV_NN_Dk(const Natural &other) const {
+    // если делитель не равен 0
+    if (!other.NZER_N_B())
+        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
+
     int k = 0;
     while (COM_NN_D(other.MUL_Nk_N(k)) != 1) {
         k++; // находим такое k, что другое, умноженное на 10^k превышает
@@ -233,9 +237,6 @@ std::pair<int, int> Natural::DIV_NN_Dk(const Natural &other) const {
 
 // N-11
 Natural Natural::DIV_NN_N(const Natural &other) const {
-    // если делитель не равен 0
-    if (!other.NZER_N_B())
-        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
     // для сохранения результата
     Natural result;
     // для хранения текущего делимого
