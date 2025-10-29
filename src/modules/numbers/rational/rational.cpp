@@ -67,6 +67,11 @@ Rational &Rational::RED_Q_Q() {
     return *this;
 }
 
+// Q-2 | Проверка сокращенного дробного на целое
+bool Rational::INT_Q_B() const {
+    return q_.as_string() == "1";
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
