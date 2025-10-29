@@ -64,6 +64,12 @@ Rational Rational::ADD_QQ_Q(const Rational &other) const {
     return result;
 }
 
+// Q-6 | Вычитание дробей
+Rational Rational::SUB_QQ_Q(const Rational &other) const {
+    const Rational negated_other(other.p_.MUL_ZM_Z(), other.q_);
+    return ADD_QQ_Q(negated_other);
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
