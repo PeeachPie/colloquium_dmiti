@@ -72,6 +72,11 @@ bool Rational::INT_Q_B() const {
     return q_.as_string() == "1";
 }
 
+// Q-3 | Преобразование целого в дробное (статический метод)
+Rational Rational::TRANS_Z_Q(const Integer &integer) {
+    return Rational(integer, Natural("1"));
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
