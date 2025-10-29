@@ -4,7 +4,7 @@
 #include "integer.hpp"
 
 /*
- *   класс рациональных цисел
+ *   класс рациональных чисел
  */
 class Rational {
 private:
