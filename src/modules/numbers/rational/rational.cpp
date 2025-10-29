@@ -70,6 +70,43 @@ Rational Rational::SUB_QQ_Q(const Rational &other) const {
     return ADD_QQ_Q(negated_other);
 }
 
+// Q-7 | Умножение дробей
+// Алгоритм с предварительным сокращением:
+// (a/b) * (c/d) = (a/gcd(a,d)) * (c/gcd(c,b)) / ((b/gcd(c,b)) * (d/gcd(a,d)))
+Rational Rational::MUL_QQ_Q(const Rational &other) const {
+    Natural abs_p = p_.ABS_Z_N();
+    Natural abs_other_p = other.p_.ABS_Z_N();
+    
+    Natural gcd1 = abs_p.GCF_NN_N(other.q_);      // gcd(|a|, d)
+    Natural gcd2 = abs_other_p.GCF_NN_N(q_);     // gcd(|c|, b)
+    
+    // Сокращаем числители и знаменатели на НОД
+    Natural reduced_abs_p = abs_p.DIV_NN_N(gcd1);        // |a| / gcd1
+    Natural reduced_abs_other_p = abs_other_p.DIV_NN_N(gcd2);  // |c| / gcd2
+    Natural reduced_q = q_.DIV_NN_N(gcd2);               // b / gcd2
+    Natural reduced_other_q = other.q_.DIV_NN_N(gcd1);   // d / gcd1
+    
+    Integer temp;
+    Integer reduced_p = temp.TRANS_N_Z(reduced_abs_p);
+    Integer reduced_other_p = temp.TRANS_N_Z(reduced_abs_other_p);
+    
+    if (p_.SGN_Z_D() == -1) {
+        reduced_p = reduced_p.MUL_ZM_Z();
+    }
+    if (other.p_.SGN_Z_D() == -1) {
+        reduced_other_p = reduced_other_p.MUL_ZM_Z();
+    }
+    
+    Integer result_numerator = reduced_p.MUL_ZZ_Z(reduced_other_p);
+    Natural result_denominator = reduced_q.MUL_NN_N(reduced_other_q);
+    
+    Rational result(result_numerator, result_denominator);
+    
+    result.RED_Q_Q();
+    
+    return result;
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
