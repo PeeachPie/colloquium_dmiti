@@ -42,6 +42,31 @@ std::string Rational::as_string() const {
     return result;
 }
 
+// Q-1 | Сокращение дроби
+Rational &Rational::RED_Q_Q() {
+    const Natural abs_numerator = p_.ABS_Z_N();
+    const Natural gcd = abs_numerator.GCF_NN_N(q_);
+
+    if (gcd.as_string() == "1") {
+        return *this;
+    }
+
+    const Natural new_abs_numerator = abs_numerator.DIV_NN_N(gcd);
+    const Natural new_denominator = q_.DIV_NN_N(gcd);
+
+    const bool is_negative = (p_.SGN_Z_D() == -1);
+
+    Integer new_numerator(new_abs_numerator.as_string());
+    if (is_negative) {
+        new_numerator = new_numerator.MUL_ZM_Z();
+    }
+
+    p_ = new_numerator;
+    q_ = new_denominator;
+
+    return *this;
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
