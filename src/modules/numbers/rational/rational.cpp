@@ -42,6 +42,28 @@ std::string Rational::as_string() const {
     return result;
 }
 
+// Q-5 | Сложение дробей
+Rational Rational::ADD_QQ_Q(const Rational &other) const {
+    Natural lcm_denominator = q_.LCM_NN_N(other.q_);
+
+    Natural factor1 = lcm_denominator.DIV_NN_N(q_);
+    Natural factor2 = lcm_denominator.DIV_NN_N(other.q_);
+
+    auto int_factor1 = Integer(factor1.as_string());
+    auto int_factor2 = Integer(factor2.as_string());
+
+    Integer new_numerator1 = p_.MUL_ZZ_Z(int_factor1);
+    Integer new_numerator2 = other.p_.MUL_ZZ_Z(int_factor2);
+
+    Integer result_numerator = new_numerator1.ADD_ZZ_Z(new_numerator2);
+
+    Rational result(result_numerator, lcm_denominator);
+
+    result.RED_Q_Q();
+
+    return result;
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
