@@ -43,9 +43,18 @@ TEST(IntegerTests, TRANS_Z_N_Integers){
 }
 
 TEST(IntegerTests, ADD_ZZ_Z_Integers){
-   Integer a("20"); Integer b("-15"); Integer c("5");
-   Integer d = a.ADD_ZZ_Z(b);
-   EXPECT_EQ(c.COM_NN_D(d), 0);
+   Integer a("20"); Integer b("-15");
+   Integer c("-20"); Integer d("15");
+   Integer asb = a.ADD_ZZ_Z(b);
+   Integer asd = a.ADD_ZZ_Z(d);
+   Integer csb = c.ADD_ZZ_Z(b);
+   Integer csd = c.ADD_ZZ_Z(d);
+   Integer r1("5"); Integer r2("35");
+   Integer r3("-35"); Integer r4("-5");
+   EXPECT_EQ(r1.COM_NN_D(asb), 0);
+   EXPECT_EQ(r2.COM_NN_D(asd), 0);
+   EXPECT_EQ(r3.COM_NN_D(csb), 0);
+   EXPECT_EQ(r4.COM_NN_D(csd), 0);
 }
 
 TEST(IntegerTests, SUB_ZZ_Z_Integers){

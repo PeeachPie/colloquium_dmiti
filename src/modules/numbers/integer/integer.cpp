@@ -60,8 +60,12 @@ Natural Integer::TRANS_Z_N() const{
 
 //Z-6
 Integer Integer::ADD_ZZ_Z(const Integer& other) const{
-    if (this->SGN_Z_D() != other.SGN_Z_D())
-        return this->SUB_ZZ_Z(other);
+    if (this->SGN_Z_D() != other.SGN_Z_D()) {
+        if (this->SGN_Z_D() == 1)
+            return this->SUB_ZZ_Z(other.MUL_ZM_Z());
+        else
+            return other.SUB_ZZ_Z(this->MUL_ZM_Z());
+    }
 
     Natural summand1 = this->TRANS_Z_N();
     Natural summand2 = other.TRANS_Z_N();
