@@ -1,12 +1,12 @@
 #include "natural.hpp"
-
+    #include <iostream>
 Natural::Natural(): n_(0), a_({'0'}) {};
 
 Natural::Natural(std::string s) {
     int first_not_zero = 0;
 
     // находим первую не нулевую цифру, либо единственный ноль
-    while (first_not_zero < s.size() && s[first_not_zero] == '0') {
+    while (first_not_zero < s.size() - 1 && s[first_not_zero] == '0') {
         first_not_zero++;
     }
 
@@ -24,7 +24,7 @@ Natural::Natural(std::string s) {
 
     std::reverse(a_.begin(), a_.end());
 
-    n_ = a_.size();
+    n_ = a_.size() - 1;
 };
 
 std::string Natural::as_string() const {
@@ -58,6 +58,8 @@ int Natural::COM_NN_D(const Natural& other) const {
 
 // N-2
 bool Natural::NZER_N_B() const {
+
+    std::cout << n_ << ' ' << a_ << '\n';
     return this->a_[n_] - '0';
 }
 
@@ -73,22 +75,26 @@ Natural Natural::ADD_NN_N(const Natural &other) const {
     if (COM_NN_D(other) != 1)
         std::swap(smaller, larger);
 
+    std::cout << "smaller=" << smaller << ' ' << larger << '\n';
+
     int transfer = 0;
 
-    std::string result = larger.as_string();
+    std::string result = larger.a_;
 
-    for (int i = 0; i < larger.n_; i++) {
-        int dig_smaller = (i < smaller.n_) ? (smaller.a_[i] - '0') : 0;
+    for (int i = 0; i <= larger.n_; i++) {
+        int dig_smaller = (i <= smaller.n_) ? (smaller.a_[i] - '0') : 0;
         int dig_larger = larger.a_[i] - '0';
+
         int digit = dig_larger + dig_smaller + transfer;
         transfer = digit / 10;
-        result[larger.n_ - i - 1] = (digit % 10) + '0';
+        result[i] = (digit % 10) + '0';
     }
 
     if (transfer > 0) {
-        char ch_dig = transfer + '0';
-        result = ch_dig + result;
+        result.push_back(transfer + '0');
     }
+
+    std::reverse(result.begin(), result.end());
 
     return Natural(result);
 }
@@ -107,9 +113,9 @@ Natural Natural::SUB_NN_N(const Natural &other) const
     std::string result = as_string();
     int borrow = 0;
 
-    for (int i = 0; i < n_; i++) {
+    for (int i = 0; i <= n_; i++) {
         int dig1 = (a_[i] - '0');
-        int dig2 = (i < other.n_) ? (other.a_[i] - '0') : 0;
+        int dig2 = (i <= other.n_) ? (other.a_[i] - '0') : 0;
 
         dig1 -= borrow;
 
@@ -121,8 +127,10 @@ Natural Natural::SUB_NN_N(const Natural &other) const
         }
 
         int diff = dig1 - dig2;
-        result[n_ - i - 1] = (diff + '0');
+        result[i] = (diff + '0');
     }
+
+    std::reverse(result.begin(), result.end());
 
     return Natural(result);
 }
@@ -143,7 +151,7 @@ Natural Natural::MUL_ND_N(int digit) const
     int transfer = 0;
     int i = 0;
 
-    for (; i < n_; i++) {
+    for (; i <= n_; i++) {
         int num = (a_[i] - '0') * digit + transfer;
         transfer = num / 10;
         char dig = (num % 10) + '0';
@@ -178,7 +186,7 @@ Natural Natural::MUL_Nk_N(int k) const {
 Natural Natural::MUL_NN_N(const Natural &other) const {
     Natural result;
 
-    for (int i = 0; i < other.n_; i++) {
+    for (int i = 0; i <= other.n_; i++) {
         // переменная, которая будет содержать результат умножения
         // числа на текущую цифру другого числа с поправкой на разряд цифры
         Natural step = this->MUL_ND_N(other.a_[i] - '0'); // умножаем число на текущую цифру другого числа
@@ -203,6 +211,10 @@ Natural Natural::SUB_NDN_N(const Natural &other, int digit) const {
 
 // N-10
 std::pair<int, int> Natural::DIV_NN_Dk(const Natural &other) const {
+    // если делитель не равен 0
+    if (!other.NZER_N_B())
+        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
+
     int k = 0;
     while (COM_NN_D(other.MUL_Nk_N(k)) != 1) {
         k++; // находим такое k, что другое, умноженное на 10^k превышает
@@ -225,9 +237,6 @@ std::pair<int, int> Natural::DIV_NN_Dk(const Natural &other) const {
 
 // N-11
 Natural Natural::DIV_NN_N(const Natural &other) const {
-    // если делитель не равен 0
-    if (!other.NZER_N_B())
-        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
     // для сохранения результата
     Natural result;
     // для хранения текущего делимого
