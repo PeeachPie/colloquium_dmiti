@@ -107,6 +107,24 @@ Rational Rational::MUL_QQ_Q(const Rational &other) const {
     return result;
 }
 
+// Q-8 | Деление дробей
+Rational Rational::DIV_QQ_Q(const Rational &other) const {
+    if (other.p_.SGN_Z_D() == 0) {
+        throw std::invalid_argument("Деление на ноль!");
+    }
+
+    // c/d -> d/c (с учётом знака)
+    const Natural abs_other_numerator = other.p_.ABS_Z_N();
+    Integer temp;
+    Integer reciprocal_numerator = temp.TRANS_N_Z(other.q_);
+    if (other.p_.SGN_Z_D() == -1) {
+        reciprocal_numerator = reciprocal_numerator.MUL_ZM_Z();
+    }
+    const Rational reciprocal(reciprocal_numerator, abs_other_numerator);
+    
+    return MUL_QQ_Q(reciprocal);
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
