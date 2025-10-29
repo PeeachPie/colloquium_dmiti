@@ -58,9 +58,7 @@ int Natural::COM_NN_D(const Natural& other) const {
 
 // N-2
 bool Natural::NZER_N_B() const {
-
-    std::cout << n_ << ' ' << a_ << '\n';
-    return this->a_[n_] - '0';
+    return !(n_ == 0 && a_[0] == '0');
 }
 
 // N-3
@@ -74,8 +72,6 @@ Natural Natural::ADD_NN_N(const Natural &other) const {
     Natural larger = other;
     if (COM_NN_D(other) != 1)
         std::swap(smaller, larger);
-
-    std::cout << "smaller=" << smaller << ' ' << larger << '\n';
 
     int transfer = 0;
 
