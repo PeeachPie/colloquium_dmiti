@@ -7,6 +7,11 @@ Integer::Integer(std::string number):
     Natural(number[0] == '-' ? number.substr(1) : number) 
 {}
 
+Integer::Integer(bool s, std::string number):
+    s_(s),
+    Natural(number)
+{}
+
 std::string Integer::as_string() const {
     std::string str = a_;
 
@@ -20,12 +25,14 @@ std::string Integer::as_string() const {
 //Z-1
 Natural Integer::ABS_Z_N() const {
     std::string result = as_string();
+    if (s_)
+        result.erase(0, 1);
     return Natural(result);
 }
 
 //Z-2
 int Integer::SGN_Z_D() const{
-    if(n_ == 0 && a_[0] == '0') return 0;
+    if(a_[n_] == '0') return 0;
     if(s_) return -1;
     return 1;
 }
@@ -53,68 +60,99 @@ Natural Integer::TRANS_Z_N() const{
 
 //Z-6
 Integer Integer::ADD_ZZ_Z(const Integer& other) const{
-    Integer result;
-    Natural summand1 = TRANS_Z_N();
+    if (this->SGN_Z_D() != other.SGN_Z_D())
+        return this->SUB_ZZ_Z(other);
+
+    Natural summand1 = this->TRANS_Z_N();
     Natural summand2 = other.TRANS_Z_N();
+    Natural sum = summand1.ADD_NN_N(summand2);
 
-    if( (s_ && other.s_) || (!s_ && !other.s_)){ //оба одного знака
-        result = summand1.ADD_NN_N(summand2);
-        result.s_ = s_;
-        return result;
-    }
-    
-    //из большего вычитаем меньшее
-    if(summand1.COM_NN_D(summand2) == 1){
-        std::swap(summand1, summand2);
-        result.s_ = false;
-    } else {
-        result.s_ = true;
-    }
-
-    Natural tmp = summand1.SUB_NN_N(summand2);
-    result.a_ = tmp.a_; result.n_ = tmp.n_;
+    Integer result = result.TRANS_N_Z(sum);
+    if (this->SGN_Z_D() == -1)
+        result = result.MUL_ZM_Z();
 
     return result;
 }
 
 //Z-7
 Integer Integer::SUB_ZZ_Z(const Integer& other) const{
-    Integer result;
-    Integer reduced = *this;
-    Integer subtrahend = other;
-
-    if(s_ && !other.s_){ //-a и b -> -a - b (уберем знаки сложим вернем знак)
-        reduced.s_ = false; subtrahend.s_ = false; //убираем знаки
-    } 
-
-    else if(!s_ && !other.s_){ //a и b -> a - b
-        subtrahend.s_ = true; //добавляем знак
-    } 
-
-    else { //-a и -b -> -a + b; a и -b -> a + b
-        subtrahend.s_ = false; //убираем знак 
+    Natural reduced = this->ABS_Z_N();
+    Natural subtrahend = other.ABS_Z_N();
+    bool switch_sign = false;
+    if (reduced.COM_NN_D(subtrahend) == 1){
+        std::swap(reduced, subtrahend);
+        switch_sign = true;
     }
-    
-    result = reduced.ADD_ZZ_Z(subtrahend); //складываем
-    if(s_ && !other.s_) result.s_ = true; //возвращаем знак
+
+    Natural sub;
+
+    if (this->SGN_Z_D() != other.SGN_Z_D()){
+        sub = reduced.ADD_NN_N(subtrahend);
+        if (this->SGN_Z_D() == -1)
+            switch_sign = !switch_sign;
+    } else {
+        sub = reduced.SUB_NN_N(subtrahend);
+        if (this->SGN_Z_D() == -1)
+            switch_sign = !switch_sign;
+    }
+
+    Integer result = result.TRANS_N_Z(sub);
+    if (switch_sign)
+        result = result.MUL_ZM_Z();
+
     return result;
 }
 
 //Z-8
 Integer Integer::MUL_ZZ_Z(const Integer& other) const{
-    Integer result;
-    Natural mul1 = TRANS_Z_N();
-    Natural mul2 = other.TRANS_Z_N();
-    
+    Natural mul1 = this->ABS_Z_N();
+    Natural mul2 = other.ABS_Z_N();
     Natural mul = mul1.MUL_NN_N(mul2);
-    result.n_ = mul.n_; result.a_ = mul.a_;
 
-    if((!s_ && !other.s_) || (s_ && result.s_)) {
-        result.s_ = false;
+    Integer result = result.TRANS_N_Z(mul);
+    if (this->SGN_Z_D() != other.SGN_Z_D())
+        result = result.MUL_ZM_Z();
+
+    return result;
+}
+
+//Z-9
+Integer Integer::DIV_ZZ_Z(const Integer& other) const {
+    Natural a = this->ABS_Z_N();
+    Natural b = other.ABS_Z_N();
+    Natural div = a.DIV_NN_N(b);
+
+    Integer result = result.TRANS_N_Z(div);
+    if (this->SGN_Z_D() != other.SGN_Z_D()) {
+        result = result.ADD_ZZ_Z(Integer("1"));
+        result = result.MUL_ZM_Z();
     }
-    else{
-        result.s_ = true;
+
+    return result;
+}
+
+//Z-10
+Integer Integer::MOD_ZZ_Z(const Integer& other) const {
+    if (this->SGN_Z_D() == other.SGN_Z_D()) {
+        Natural divisible = this->ABS_Z_N();
+        Natural divisor = other.ABS_Z_N();
+        Natural div = divisible.MOD_NN_N(divisor);
+
+        Integer result = result.TRANS_N_Z(div);
+        return result;
     }
+
+    Integer div = this->DIV_ZZ_Z(other);
+
+    Integer closest_max = div.MUL_ZZ_Z(other);
+    if (closest_max.SGN_Z_D() == -1)
+        closest_max = closest_max.MUL_ZM_Z();
+
+    Integer divisible = *this;
+    if (divisible.SGN_Z_D() == -1)
+        divisible = divisible.MUL_ZM_Z();
+
+    Integer result = closest_max.SUB_ZZ_Z(divisible);
 
     return result;
 }

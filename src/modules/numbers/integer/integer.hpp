@@ -16,6 +16,8 @@ public:
 
     Integer(std::string number);
 
+    Integer(bool s, std::string number);
+
     std::string as_string() const;
 
     // Z-1 Абсолютная величина числа, результат - натуральное
