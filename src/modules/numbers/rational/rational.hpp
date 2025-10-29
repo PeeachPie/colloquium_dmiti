@@ -14,6 +14,17 @@ private:
     Natural q_;
 
 public:
+    Rational();
+
+    Rational(const Integer& numerator, const Natural& denominator);
+    
+    explicit Rational(const std::string& str);
+    
+    [[nodiscard]] const Integer& numerator() const { return p_; }
+    [[nodiscard]] const Natural& denominator() const { return q_; }
+    
+    [[nodiscard]] std::string as_string() const;
+    
     // Q-1 | Сокращение дроби
     Rational& RED_Q_Q();
     
