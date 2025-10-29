@@ -18,7 +18,7 @@ TEST(NaturalTests, COM_NN_D_Naturals){
 }
 
 //N-2
-TEST(NaturalTests, NZER_N_B_Naturals) {
+TEST(NaturalTests, NZER_N_B_Naturals){
     Natural a("287");
     Natural b("0");
 
@@ -62,7 +62,7 @@ TEST(NaturalTests, MUL_Nk_N_Naturals){
 }
 
 //N-8
-TEST(NaturalTests, MUL_NN_N_Naturals) {
+TEST(NaturalTests, MUL_NN_N_Naturals){
     Natural a("123");
     Natural b("456");
     Natural c("56088");
@@ -87,7 +87,7 @@ TEST(NaturalTests, DIV_NN_Dk_Naturals){
 }
 
 //N-11
-TEST(NaturalTests, DIV_NN_N_Naturals) {
+TEST(NaturalTests, DIV_NN_N_Naturals){
     Natural a("138");
     Natural b("27");
     Natural c("5");
@@ -97,7 +97,7 @@ TEST(NaturalTests, DIV_NN_N_Naturals) {
 }
 
 //N-12
-TEST(NaturalTests, MOD_NN_N_Naturals) {
+TEST(NaturalTests, MOD_NN_N_Naturals){
     Natural a("329");
     Natural b("17");
     Natural c("6");
@@ -107,7 +107,7 @@ TEST(NaturalTests, MOD_NN_N_Naturals) {
 }
 
 //N-13
-TEST(NaturalTests, GCF_NN_N_Naturals) {
+TEST(NaturalTests, GCF_NN_N_Naturals){
     Natural a("1089");
     Natural b("345");
     Natural c("3");
@@ -117,7 +117,7 @@ TEST(NaturalTests, GCF_NN_N_Naturals) {
 }
 
 //N-14
-TEST(NaturalTests, LCM_NN_N_Naturals) {
+TEST(NaturalTests, LCM_NN_N_Naturals){
     Natural a("120");
     Natural b("298");
     Natural c("17880");
