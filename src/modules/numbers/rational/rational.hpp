@@ -49,3 +49,5 @@ public:
     // Q-8 | Деление дробей (делитель отличен от нуля)
     [[nodiscard]] Rational DIV_QQ_Q(const Rational& other) const;
 };
+
+std::ostream& operator<<(std::ostream& os, const Rational& rational);
