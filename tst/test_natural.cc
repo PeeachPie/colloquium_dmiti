@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "natural.hpp"
 
+#include <iostream>
+
 TEST(NaturalTests, CreateDefault) {
     EXPECT_EQ(Natural().as_string(), "0");
 }
@@ -35,14 +37,14 @@ TEST(NaturalTests, ADD_1N_N_Naturals){
 
 //N-4
 TEST(NaturalTests, ADD_NN_N_Naturals){
-    Natural a("10"); Natural b("15"); Natural c("25");
+    Natural a("20"); Natural b("95"); Natural c("115");
     Natural d = a.ADD_NN_N(b);
     EXPECT_EQ(d.COM_NN_D(c), 0);
 }
 
 //N-5
 TEST(NaturalTests, SUB_NN_N_Naturals){
-    Natural a("380"); Natural b("5"); Natural c("375");
+    Natural a("380"); Natural b("21"); Natural c("359");
     Natural d = a.SUB_NN_N(b);
     EXPECT_EQ(d.COM_NN_D(c), 0);
 }
