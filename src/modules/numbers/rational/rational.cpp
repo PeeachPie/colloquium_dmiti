@@ -77,6 +77,14 @@ Rational Rational::TRANS_Z_Q(const Integer &integer) {
     return Rational(integer, Natural("1"));
 }
 
+// Q-4 | Преобразование сокращенного дробного в целое (если знаменатель равен 1)
+Integer Rational::TRANS_Q_Z() const {
+    if (!INT_Q_B()) {
+        throw std::invalid_argument("Рациональное число не является целым!");
+    }
+    return p_;
+}
+
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
 }
