@@ -51,3 +51,5 @@ public:
     // Z-10 Остаток от деления целого на целое(делитель отличен от нуля)
     Integer MOD_ZZ_Z(const Integer& other) const;
 };
+
+std::ostream &operator<<(std::ostream &os, const Integer &number);

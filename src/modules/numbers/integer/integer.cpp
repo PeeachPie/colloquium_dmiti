@@ -1,22 +1,20 @@
 #include "integer.hpp"
 
 Integer::Integer() : Natural(), s_(false) {}
-Integer::Integer(std::string number){
-    if (number != "" && number[0] == '-') {
-        s_ = true;
-        number = number.substr(1);
-    } else {
-        s_ = false;
-    }
-        
-    Natural tmp(number);
-    this->a_ = tmp.a_;
-    this->n_ = tmp.n_;
-        
-    //пусть знак нуля будет отрицательным
-    if (a_ == "0") {
-        s_ = true;
-    } 
+
+Integer::Integer(std::string number):
+    s_(number[0] == '-'),
+    Natural(number[0] == '-' ? number.substr(1) : number) 
+{}
+
+std::string Integer::as_string() const {
+    std::string str = a_;
+
+    if (s_) str.push_back('-');
+
+    std::reverse(str.begin(), str.end());
+
+    return str;
 }
 
 //Z-1
@@ -40,22 +38,17 @@ Integer Integer::MUL_ZM_Z() const{
 }
 
 //Z-4
-Integer Integer::TRANS_N_Z(const Natural& natural){
-    Integer result;
-    result.n_ = natural.n_;
-    result.a_ = natural.a_;
-    result.s_ = false;
-
-    return result;
+Integer Integer::TRANS_N_Z(const Natural& natural){ 
+    return Integer(natural.as_string());
 }
 
 //Z-5
 Natural Integer::TRANS_Z_N() const{
-    Natural result;
-    result.n_ = n_;
-    result.a_ = a_;
+    std::string from = a_;
 
-    return result;
+    reverse(from.begin(), from.end());
+
+    return Natural(from);
 }
 
 //Z-6
@@ -126,3 +119,6 @@ Integer Integer::MUL_ZZ_Z(const Integer& other) const{
     return result;
 }
 
+std::ostream &operator<<(std::ostream &os, const Integer &number) {
+    return os << number.as_string();
+}
