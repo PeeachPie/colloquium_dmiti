@@ -42,6 +42,47 @@ std::string Rational::as_string() const {
     return result;
 }
 
+// Q-1 | Сокращение дроби
+Rational &Rational::RED_Q_Q() {
+    const Natural abs_numerator = p_.ABS_Z_N();
+    const Natural gcd = abs_numerator.GCF_NN_N(q_);
+
+    if (gcd.as_string() == "1") {
+        return *this;
+    }
+
+    const Natural new_abs_numerator = abs_numerator.DIV_NN_N(gcd);
+    const Natural new_denominator = q_.DIV_NN_N(gcd);
+
+    const bool is_negative = (p_.SGN_Z_D() == -1);
+
+    Integer new_numerator(new_abs_numerator.as_string());
+    if (is_negative) {
+        new_numerator = new_numerator.MUL_ZM_Z();
+    }
+
+    p_ = new_numerator;
+    q_ = new_denominator;
+
+    return *this;
+}
+
+// Q-2 | Проверка сокращенного дробного на целое
+bool Rational::INT_Q_B() const {
+    return q_.as_string() == "1";
+}
+
+// Q-3 | Преобразование целого в дробное (статический метод)
+Rational Rational::TRANS_Z_Q(const Integer &integer) {
+    return Rational(integer, Natural("1"));
+}
+
+// Q-4 | Преобразование сокращенного дробного в целое (если знаменатель равен 1)
+Integer Rational::TRANS_Q_Z() const {
+    if (!INT_Q_B()) {
+        throw std::invalid_argument("Рациональное число не является целым!");
+    }
+    return p_;
 // Q-5 | Сложение дробей
 Rational Rational::ADD_QQ_Q(const Rational &other) const {
     Natural lcm_denominator = q_.LCM_NN_N(other.q_);
