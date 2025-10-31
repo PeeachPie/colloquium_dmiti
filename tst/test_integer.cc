@@ -25,14 +25,14 @@ TEST(IntegerTests, SGN_Z_D_Integers){
 TEST(IntegerTests, COM_ZZ_D_Integers){
    Integer a("-198"); Integer b("115"); Integer c;
    EXPECT_EQ(a.COM_ZZ_D(a), 0);
-   EXPECT_EQ(a.COM_ZZ_D(b), 1);
-   EXPECT_EQ(a.COM_ZZ_D(c), 1);
+   EXPECT_EQ(a.COM_ZZ_D(b), -1);
+   EXPECT_EQ(a.COM_ZZ_D(c), -1);
    EXPECT_EQ(b.COM_ZZ_D(b), 0);
-   EXPECT_EQ(b.COM_ZZ_D(a), 2);
-   EXPECT_EQ(b.COM_ZZ_D(c), 2);
+   EXPECT_EQ(b.COM_ZZ_D(a), 1);
+   EXPECT_EQ(b.COM_ZZ_D(c), 1);
    EXPECT_EQ(c.COM_ZZ_D(c), 0);
-   EXPECT_EQ(c.COM_ZZ_D(a), 2);
-   EXPECT_EQ(c.COM_ZZ_D(b), 1);
+   EXPECT_EQ(c.COM_ZZ_D(a), 1);
+   EXPECT_EQ(c.COM_ZZ_D(b), -1);
 }
 
 TEST(IntegerTests, MUL_ZM_Z_Integers){
@@ -126,6 +126,20 @@ TEST(IntegerTests, DIV_ZZ_Z_Integers){
     EXPECT_EQ(r4.COM_ZZ_D(ctd), 0);
 }
 
+TEST(IntegerTests, DIV_ZZ_Z_Integers_ZeroMod){
+    Integer a("-48"); Integer b("6");
+    Integer c("48"); Integer d("-6");
+    Integer atb = a.DIV_ZZ_Z(b);
+    Integer atd = a.DIV_ZZ_Z(d);
+    Integer ctb = c.DIV_ZZ_Z(b);
+    Integer ctd = c.DIV_ZZ_Z(d);
+    Integer r1("-8"); Integer r2("8");
+    EXPECT_EQ(r1.COM_ZZ_D(atb), 0);
+    EXPECT_EQ(r2.COM_ZZ_D(atd), 0);
+    EXPECT_EQ(r2.COM_ZZ_D(ctb), 0);
+    EXPECT_EQ(r1.COM_ZZ_D(ctd), 0);
+}
+
 TEST(IntegerTests, DIV_ZZ_Z_Integers_Zero){
     Integer a("20"); Integer b;
     EXPECT_THROW(a.DIV_ZZ_Z(b), std::invalid_argument);
@@ -146,4 +160,11 @@ TEST(IntegerTests, MOD_ZZ_Z_Integers){
     EXPECT_EQ(r2.COM_ZZ_D(atd), 0);
     EXPECT_EQ(r3.COM_ZZ_D(ctb), 0);
     EXPECT_EQ(r4.COM_ZZ_D(ctd), 0);
+}
+
+TEST(IntegerTests, MOD_ZZ_Z_Integers_Zero){
+    Integer a("20"); Integer b;
+    EXPECT_THROW(a.MOD_ZZ_Z(b), std::invalid_argument);
+    Integer c = b.MOD_ZZ_Z(a);
+    EXPECT_EQ(c.COM_ZZ_D(b), 0);
 }

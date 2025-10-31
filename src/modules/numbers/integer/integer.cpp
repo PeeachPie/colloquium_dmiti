@@ -2,12 +2,12 @@
 
 Integer::Integer() : m_(), s_(false) {}
 
-Integer::Integer(std::string number):
+Integer::Integer(const std::string& number):
     s_(number[0] == '-'),
     m_(number[0] == '-' ? number.substr(1) : number) 
 {}
 
-Integer::Integer(bool s, std::string number):
+Integer::Integer(bool s, const std::string& number):
     s_(s),
     m_(number)
 {}
@@ -16,34 +16,37 @@ std::string Integer::as_string() const {
     // сохраняем поле Natural m_ как строку
     std::string str = m_.as_string();
 
-    // если данное целое число отрицательное,
+    // если данное целое число отрицательное и не 0,
     // то вставляем в начало минус
-    if (s_)
+    if (s_ && m_.NZER_N_B())
         str = '-' + str;
 
     return str;
 }
 
 //Z-0
-int Integer::COM_ZZ_D(const Integer &other) const {
+int Integer::COM_ZZ_D(const Integer& other) const {
+    // если числа одного знака
     if (s_ == other.s_) {
+        // сравниваем модули, затем делаем поправку на знак
         if (m_.COM_NN_D(other.m_) == 2) {
             if (s_)
-                return 1;
+                return -1;
             else
-                return 2;
+                return 1;
         } else if (m_.COM_NN_D(other.m_) == 1) {
             if (s_)
-                return 2;
-            else
                 return 1;
+            else
+                return -1;
         } else
             return 0;
+    // иначе больше то, которое положительно
     } else {
         if (s_)
-            return 1;
+            return -1;
         else
-            return 2;
+            return 1;
     }
 }
 
@@ -65,8 +68,12 @@ int Integer::SGN_Z_D() const{
 
 //Z-3
 Integer Integer::MUL_ZM_Z() const{
+    // если 0, то ничего не делаем
+    if (!m_.NZER_N_B())
+        return *this;
+    // иначе меняем знак
     Integer result = *this;
-    result.s_ = !result.s_; //просто меняем знак
+    result.s_ = !result.s_;
     return result;
 }
 
@@ -77,6 +84,10 @@ Integer Integer::TRANS_N_Z(const Natural& natural){
 
 //Z-5
 Natural Integer::TRANS_Z_N() const{
+    // если число отрицательно и не 0, то выбрасывается исключение
+    if (s_ && m_.NZER_N_B())
+        throw std::invalid_argument("Число должно быть неотрицательным!");
+
     return m_; // возвращаем содержимое поля Natural m_
 }
 
@@ -134,8 +145,8 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const{
 Integer Integer::MUL_ZZ_Z(const Integer& other) const{
     // перемножаем модули множителей
     Integer result = result.TRANS_N_Z(m_.MUL_NN_N(other.m_));
-    // если знаки множителей различны, то меняем
-    // знак результата на минус
+    // если знаки множителей различны,
+    // то меняем знак результата на минус
     if (s_ != other.s_)
         result = result.MUL_ZM_Z();
 
@@ -144,49 +155,34 @@ Integer Integer::MUL_ZZ_Z(const Integer& other) const{
 
 //Z-9
 Integer Integer::DIV_ZZ_Z(const Integer& other) const {
+    // если делитель равен 0
+    if (!other.m_.NZER_N_B())
+        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
     // делим модуль делимого на модуль делителя
-    Integer result = result.TRANS_N_Z(m_.DIV_NN_N(other.m_));
-    // если знаки делимого и делителя различны, то
-    // добавляем к результату 1 и меняем его знак на минус
-    if (s_ != other.s_) {
-        result.m_ = result.m_.ADD_1N_N();
-        result = result.MUL_ZM_Z();
+    Integer div = div.TRANS_N_Z(m_.DIV_NN_N(other.m_));
+    // находим остаток от деления модуля делимого
+    // на модуль делителя
+    Integer remain = remain.TRANS_N_Z(m_.MOD_NN_N(other.m_));
+    // если знаки делимого и делителя различны
+    if (s_ != other.s_){
+        // если остаток ненулевой, то прибавляем к результату 1
+        if (remain.m_.NZER_N_B())
+            div = div.TRANS_N_Z(div.m_.ADD_1N_N());
+        // меняем знак результата
+        div = div.MUL_ZM_Z();
     }
 
-    return result;
+    return div;
 }
 
 //Z-10
 Integer Integer::MOD_ZZ_Z(const Integer& other) const {
-    // если знаки делимого и делителя одинаковы, то
-    // остаток ищем как для натуральных
-    if (s_ == other.s_) {
-        Integer result = result.TRANS_N_Z(m_.MOD_NN_N(other.m_));
-        return result;
-    }
-
-    // иначе
-    // находим отрицательное неполное частное
-    Integer div = DIV_ZZ_Z(other);
-
-    // находим произведение неполного отрицательного частного
-    // и делителя
-    Integer closest_max = div.MUL_ZZ_Z(other);
-    // если результат отрицательный - меняем знак
-    if (closest_max.s_)
-        closest_max = closest_max.MUL_ZM_Z();
-
-    // сохраняем делимое в отдельную переменную
-    Integer divisible = *this;
-    // если результат отрицательный - меняем знак
-    if (divisible.s_)
-        divisible = divisible.MUL_ZM_Z();
-
-    // находим разность большего и меньшего,
-    // сохраняя положительный остаток
-    Integer result = closest_max.SUB_ZZ_Z(divisible);
-
-    return result;
+    // если делитель равен 0
+    if (!other.m_.NZER_N_B())
+        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
+    // находим остаток
+    Integer remain = remain.TRANS_N_Z(m_.MOD_NN_N(other.m_));
+    return remain;
 }
 
 std::ostream &operator<<(std::ostream &os, const Integer &number) {

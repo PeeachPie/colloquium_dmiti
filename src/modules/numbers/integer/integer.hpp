@@ -15,9 +15,9 @@ public:
     
     Integer();
 
-    Integer(std::string number);
+    explicit Integer(const std::string &number);
 
-    Integer(bool s, std::string number);
+    Integer(bool s, const std::string &number);
 
     std::string as_string() const;
 
