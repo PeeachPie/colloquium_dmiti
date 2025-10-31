@@ -83,6 +83,8 @@ Integer Rational::TRANS_Q_Z() const {
         throw std::invalid_argument("Рациональное число не является целым!");
     }
     return p_;
+}
+
 // Q-5 | Сложение дробей
 Rational Rational::ADD_QQ_Q(const Rational &other) const {
     Natural lcm_denominator = q_.LCM_NN_N(other.q_);

@@ -19,6 +19,10 @@ private:
     std::vector<Rational> c_;
 
 public:
+    Polynomial();
+
+    Polynomial(std::vector<std::pair<Rational, int>> p);
+
     // P-1 | Сложение многочленов
     Polynomial ADD_PP_P(const Polynomial& other) const;
     
@@ -57,4 +61,6 @@ public:
     
     // P-13 | Преобразование многочлена — кратные корни в простые
     Polynomial NMR_P_P() const;
+
+    void print_polynomial();
 };
