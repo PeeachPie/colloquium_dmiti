@@ -5,8 +5,9 @@
 /*
  *   класс целых чисел
  */
-class Integer : public Natural {
+class Integer {
 private:
+    Natural m_;
     // знак числа (true — минус, false — плюс)
     bool s_;
 
@@ -14,11 +15,14 @@ public:
     
     Integer();
 
-    Integer(std::string number);
+    explicit Integer(const std::string &number);
 
-    Integer(bool s, std::string number);
+    Integer(bool s, const std::string &number);
 
     std::string as_string() const;
+
+    // Z-0
+    int COM_ZZ_D(const Integer &other) const;
 
     // Z-1 Абсолютная величина числа, результат - натуральное
     Natural ABS_Z_N() const;

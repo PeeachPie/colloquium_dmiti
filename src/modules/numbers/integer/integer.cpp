@@ -1,120 +1,153 @@
 #include "integer.hpp"
 
-Integer::Integer() : Natural(), s_(false) {}
+Integer::Integer() : m_(), s_(false) {}
 
-Integer::Integer(std::string number):
+Integer::Integer(const std::string& number):
     s_(number[0] == '-'),
-    Natural(number[0] == '-' ? number.substr(1) : number) 
+    m_(number[0] == '-' ? number.substr(1) : number) 
 {}
 
-Integer::Integer(bool s, std::string number):
+Integer::Integer(bool s, const std::string& number):
     s_(s),
-    Natural(number)
+    m_(number)
 {}
 
 std::string Integer::as_string() const {
-    std::string str = a_;
+    // сохраняем поле Natural m_ как строку
+    std::string str = m_.as_string();
 
-    if (s_) str.push_back('-');
-
-    std::reverse(str.begin(), str.end());
+    // если данное целое число отрицательное и не 0,
+    // то вставляем в начало минус
+    if (s_ && m_.NZER_N_B())
+        str = '-' + str;
 
     return str;
 }
 
+//Z-0
+int Integer::COM_ZZ_D(const Integer& other) const {
+    // если числа одного знака
+    if (s_ == other.s_) {
+        // сравниваем модули, затем делаем поправку на знак
+        if (m_.COM_NN_D(other.m_) == 2) {
+            if (s_)
+                return -1;
+            else
+                return 1;
+        } else if (m_.COM_NN_D(other.m_) == 1) {
+            if (s_)
+                return 1;
+            else
+                return -1;
+        } else
+            return 0;
+    // иначе больше то, которое положительно
+    } else {
+        if (s_)
+            return -1;
+        else
+            return 1;
+    }
+}
+
+
 //Z-1
 Natural Integer::ABS_Z_N() const {
-    std::string result = as_string();
-    if (s_)
-        result.erase(0, 1);
-    return Natural(result);
+    return m_; // возвращаем содержимое поля Natural m_
 }
 
 //Z-2
 int Integer::SGN_Z_D() const{
-    if(a_[n_] == '0') return 0;
+    // если число равно 0
+    if(!m_.NZER_N_B()) return 0;
+    // если число отрицательно
     if(s_) return -1;
+    // если число положительно
     return 1;
 }
 
 //Z-3
 Integer Integer::MUL_ZM_Z() const{
+    // если 0, то ничего не делаем
+    if (!m_.NZER_N_B())
+        return *this;
+    // иначе меняем знак
     Integer result = *this;
-    result.s_ = !result.s_; //просто меняем знак
+    result.s_ = !result.s_;
     return result;
 }
 
 //Z-4
 Integer Integer::TRANS_N_Z(const Natural& natural){ 
-    return Integer(natural.as_string());
+    return Integer(natural.as_string()); // создаем целое число из заданного натурального
 }
 
 //Z-5
 Natural Integer::TRANS_Z_N() const{
-    std::string from = a_;
+    // если число отрицательно и не 0, то выбрасывается исключение
+    if (s_ && m_.NZER_N_B())
+        throw std::invalid_argument("Число должно быть неотрицательным!");
 
-    reverse(from.begin(), from.end());
-
-    return Natural(from);
+    return m_; // возвращаем содержимое поля Natural m_
 }
 
 //Z-6
 Integer Integer::ADD_ZZ_Z(const Integer& other) const{
-    if (this->SGN_Z_D() != other.SGN_Z_D()) {
-        if (this->SGN_Z_D() == 1)
-            return this->SUB_ZZ_Z(other.MUL_ZM_Z());
-        else
-            return other.SUB_ZZ_Z(this->MUL_ZM_Z());
+    Integer result;
+
+    // если оба слагаемых одного знака
+    if (s_ == other.s_) {
+        result = result.TRANS_N_Z(m_.ADD_NN_N(other.m_));
+        result.s_ = s_;
+    } else {
+        // если слагаемые разных знаков и ->
+        // знак берем от большего по модулю числа
+        if (m_.COM_NN_D(other.m_) != 1){
+            //-> модуль первого не меньше модуля второго
+            result = result.TRANS_N_Z(m_.SUB_NN_N(other.m_));
+            result.s_ = s_;
+        } else {
+            //-> модуль первого меньше модуля второго
+            result = result.TRANS_N_Z((other.m_).SUB_NN_N(m_));
+            result.s_ = other.s_;
+        }
     }
-
-    Natural summand1 = this->TRANS_Z_N();
-    Natural summand2 = other.TRANS_Z_N();
-    Natural sum = summand1.ADD_NN_N(summand2);
-
-    Integer result = result.TRANS_N_Z(sum);
-    if (this->SGN_Z_D() == -1)
-        result = result.MUL_ZM_Z();
 
     return result;
 }
 
 //Z-7
 Integer Integer::SUB_ZZ_Z(const Integer& other) const{
-    Natural reduced = this->ABS_Z_N();
-    Natural subtrahend = other.ABS_Z_N();
-    bool switch_sign = false;
-    if (reduced.COM_NN_D(subtrahend) == 1){
-        std::swap(reduced, subtrahend);
-        switch_sign = true;
-    }
+    Integer result;
 
-    Natural sub;
-
-    if (this->SGN_Z_D() != other.SGN_Z_D()){
-        sub = reduced.ADD_NN_N(subtrahend);
-        if (this->SGN_Z_D() == -1)
-            switch_sign = !switch_sign;
+    // если вычитаемое и уменьшаемое разных знаков
+    if (s_ != other.s_) {
+        result = result.TRANS_N_Z(m_.ADD_NN_N(other.m_));
+        result.s_ = s_;
     } else {
-        sub = reduced.SUB_NN_N(subtrahend);
-        if (this->SGN_Z_D() == -1)
-            switch_sign = !switch_sign;
+        // если уменьшаемое и вычитаемое одного знака и ->
+        // знак берем от большего по модулю числа
+        if (m_.COM_NN_D(other.m_) != 1){
+            //-> модуль уменьшаемого не меньше модуля вычитаемого
+            result = result.TRANS_N_Z(m_.SUB_NN_N(other.m_));
+            result.s_ = s_;
+        } else {
+            //-> модуль уменьшаемого меньше модуля вычитаемого
+            result = result.TRANS_N_Z((other.m_).SUB_NN_N(m_));
+            result.s_ = other.s_;
+        }
     }
-
-    Integer result = result.TRANS_N_Z(sub);
-    if (switch_sign)
-        result = result.MUL_ZM_Z();
 
     return result;
 }
 
 //Z-8
 Integer Integer::MUL_ZZ_Z(const Integer& other) const{
-    Natural mul1 = this->ABS_Z_N();
-    Natural mul2 = other.ABS_Z_N();
-    Natural mul = mul1.MUL_NN_N(mul2);
-
-    Integer result = result.TRANS_N_Z(mul);
-    if (this->SGN_Z_D() != other.SGN_Z_D())
+    // перемножаем модули множителей
+    Integer result = result.TRANS_N_Z(m_.MUL_NN_N(other.m_));
+    // если знаки множителей различны,
+    // то меняем знак результата на минус
+    if (s_ != other.s_)
         result = result.MUL_ZM_Z();
 
     return result;
@@ -122,43 +155,34 @@ Integer Integer::MUL_ZZ_Z(const Integer& other) const{
 
 //Z-9
 Integer Integer::DIV_ZZ_Z(const Integer& other) const {
-    Natural a = this->ABS_Z_N();
-    Natural b = other.ABS_Z_N();
-    Natural div = a.DIV_NN_N(b);
-
-    Integer result = result.TRANS_N_Z(div);
-    if (this->SGN_Z_D() != other.SGN_Z_D()) {
-        result = result.ADD_ZZ_Z(Integer("1"));
-        result = result.MUL_ZM_Z();
+    // если делитель равен 0
+    if (!other.m_.NZER_N_B())
+        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
+    // делим модуль делимого на модуль делителя
+    Integer div = div.TRANS_N_Z(m_.DIV_NN_N(other.m_));
+    // находим остаток от деления модуля делимого
+    // на модуль делителя
+    Integer remain = remain.TRANS_N_Z(m_.MOD_NN_N(other.m_));
+    // если знаки делимого и делителя различны
+    if (s_ != other.s_){
+        // если остаток ненулевой, то прибавляем к результату 1
+        if (remain.m_.NZER_N_B())
+            div = div.TRANS_N_Z(div.m_.ADD_1N_N());
+        // меняем знак результата
+        div = div.MUL_ZM_Z();
     }
 
-    return result;
+    return div;
 }
 
 //Z-10
 Integer Integer::MOD_ZZ_Z(const Integer& other) const {
-    if (this->SGN_Z_D() == other.SGN_Z_D()) {
-        Natural divisible = this->ABS_Z_N();
-        Natural divisor = other.ABS_Z_N();
-        Natural div = divisible.MOD_NN_N(divisor);
-
-        Integer result = result.TRANS_N_Z(div);
-        return result;
-    }
-
-    Integer div = this->DIV_ZZ_Z(other);
-
-    Integer closest_max = div.MUL_ZZ_Z(other);
-    if (closest_max.SGN_Z_D() == -1)
-        closest_max = closest_max.MUL_ZM_Z();
-
-    Integer divisible = *this;
-    if (divisible.SGN_Z_D() == -1)
-        divisible = divisible.MUL_ZM_Z();
-
-    Integer result = closest_max.SUB_ZZ_Z(divisible);
-
-    return result;
+    // если делитель равен 0
+    if (!other.m_.NZER_N_B())
+        throw std::invalid_argument("Делитель должен быть отличен от нуля!");
+    // находим остаток
+    Integer remain = remain.TRANS_N_Z(m_.MOD_NN_N(other.m_));
+    return remain;
 }
 
 std::ostream &operator<<(std::ostream &os, const Integer &number) {
