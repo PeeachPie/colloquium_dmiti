@@ -112,6 +112,28 @@ Polynomial Polynomial::DER_P_P() const {
     return result;
 }
 
+Polynomial Polynomial::NORM_P_P() const {
+    Polynomial result = *this;
+
+    // удаляем ведущие нули
+    while (!result.c_.empty() &&
+           !result.c_.back().numerator().ABS_Z_N().NZER_N_B()) {
+        result.c_.pop_back();
+    }
+
+    // если полином пуст = нулевой
+    if (result.c_.empty()) {
+        result.m_ = 0;
+        result.c_.assign(1, Rational(0));
+        return result;
+    }
+
+    result.m_ = result.c_.size() - 1;
+
+    return result;
+}
+
+
 void Polynomial::print_polynomial() {
     for (int i = m_; i >= 0; i--) {
         if (c_[i].numerator().ABS_Z_N().NZER_N_B())

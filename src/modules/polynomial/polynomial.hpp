@@ -62,5 +62,8 @@ public:
     // P-13 | Преобразование многочлена — кратные корни в простые
     Polynomial NMR_P_P() const;
 
+    // Нормализация многочлена
+    Polynomial NORM_P_P() const;
+
     void print_polynomial();
 };
