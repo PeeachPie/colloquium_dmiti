@@ -4,21 +4,21 @@
 TEST(PolynomialTest, Create_Default) {
     Polynomial p;
     EXPECT_TRUE(p.NZER_P_B());
-    // EXPECT_EQ(p.DEG_P_N(), 0); - метод DEG_P_N() еще не реализован
+    EXPECT_EQ(p.DEG_P_N().as_string(), "0");
 }
 
 TEST(PolynomialTest, Create_Default_Long) {
     Polynomial p(79);
     EXPECT_FALSE(p.NZER_P_B());
-    // EXPECT_EQ(p.DEG_P_N(), 79); - метод DEG_P_N() еще не реализован
+    EXPECT_EQ(p.DEG_P_N().as_string(), "79");
 }
 
 TEST(PolynomialTest, Create) {
     std::vector<std::string> coeffs = {"1", "-2/3", "4/5", "-6/7", "7/8"};
     std::vector<int> degs = {10, 8, 6, 4, 2};
     Polynomial p(coeffs, degs);
-    // EXPECT_EQ(p.DEG_P_N(), 10); - метод DEG_P_N() еще не реализован
-    // EXPECT_EQ(p.LED_P_Q(), Rational("1")) - метод LED_P_Q() еще не реализован
+    EXPECT_EQ(p.DEG_P_N().as_string(), "10");
+    EXPECT_EQ(p.LED_P_Q().as_string(), "1");
 }
 
 TEST(PolynomialTest, Create_Exception_TooFewDegs) {
@@ -87,6 +87,39 @@ TEST(PolynomialTest, DER_P_P) {
     std::vector<int> degs = {7, 5, 3, 0};
     Polynomial p(coeffs, degs);
     Polynomial result = p.DER_P_P();
-    // EXPECT_EQ(result.DEG_P_N(), 6); - метод DEG_P_N() еще не реализован
+    EXPECT_EQ(result.DEG_P_N().as_string(), "6");
     EXPECT_EQ(result.as_string(), "-10 * x ^ 6 -7/2 * x ^ 4 + 29/5 * x ^ 2");
+}
+
+TEST(PolynomialTests, LED_P_Q) {
+    std::vector<std::string> coeffs = {"1", "-2", "3"};
+    std::vector<int> degs = {0, 1, 2};
+    Polynomial p(coeffs, degs);
+    EXPECT_EQ(p.LED_P_Q().as_string(), "3");
+}
+
+TEST(PolynomialTests, Add_PP_P) {
+    std::vector<std::string> coeffs1 = {"1", "2", "3"};
+    std::vector<int> degs1 = {0, 1, 2};
+    Polynomial p1(coeffs1, degs1);
+
+    std::vector<std::string> coeffs2 = {"2", "-1", "4"};
+    std::vector<int> degs2 = {0, 1, 2};
+    Polynomial p2(coeffs2, degs2);
+
+    Polynomial result = p1.ADD_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "7 * x ^ 2 + 1 * x ^ 1 + 3");
+}
+
+TEST(PolynomialTests, Sub_PP_P) {
+    std::vector<std::string> coeffs1 = {"1", "2", "3"};
+    std::vector<int> degs1 = {0, 1, 2};
+    Polynomial p1(coeffs1, degs1);
+
+    std::vector<std::string> coeffs2 = {"2", "-1", "4"};
+    std::vector<int> degs2 = {0, 1, 2};
+    Polynomial p2(coeffs2, degs2);
+
+    Polynomial result = p1.SUB_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "-1 * x ^ 2 + 3 * x ^ 1 -1");
 }
