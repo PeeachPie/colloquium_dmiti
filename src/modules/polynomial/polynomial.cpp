@@ -26,8 +26,6 @@ Polynomial::Polynomial(std::vector<std::string>& coeffs, std::vector<int> degs) 
 
     for (int i = 0; i <= m_; i++)
         c_[i] = cd[i];
-
-    this->NORM_P_P();
 }
 
 std::string Polynomial::as_string() const {
@@ -63,11 +61,13 @@ bool Polynomial::NZER_P_B() const {
 // P-3
 Polynomial Polynomial::MUL_PQ_P(const Rational& rational) const {
     Polynomial result = *this;
-    // умножаем каждый коэффициент исходного полинома
-    // на заданное число
-    for (auto& coeff : result.c_)
-        coeff = coeff.MUL_QQ_Q(rational);
-    result = result.NORM_P_P();
+    // если полином ненулевой
+    if (result.NZER_P_B()) {
+        // умножаем каждый коэффициент исходного полинома
+        // на заданное число
+        for (auto& coeff : result.c_)
+            coeff = coeff.MUL_QQ_Q(rational);
+    }
     return result;
 }
 
@@ -76,20 +76,21 @@ Polynomial Polynomial::MUL_Pxk_P(int k) const {
     // если k меньше 0, то ошибка
     if (k < 0)
         throw std::invalid_argument("Степень должна быть натуральной или 0!");
-    // если степень множителя 0, то ничего не делаем
-    if (k == 0)
+    // если степень множителя 0 или полином нулевой,
+    // то ничего не делаем
+    if (k == 0 || !NZER_P_B())
         return *this;
     // создаем нулевой полином нового размера
     Polynomial result(m_ + k);
     // переносим коэффициенты на k вправо
     for (int i = 0; i <= m_; i++)
         result.c_[i + k] = c_[i];
-    result = result.NORM_P_P();
     return result;
 }
 
 // P-7
 std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
+    // если полином нулевой, то ошибка
     if (!NZER_P_B())
         throw std::invalid_argument("Полином нулевой!");
 
@@ -99,7 +100,7 @@ std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
     for (Rational coeff : c_) {
         // если коэффициент ненулевой,
         if (coeff.NZER_Q_B()) {
-            // то его получаем числитель и знаменатель
+            // то получаем его числитель и знаменатель
             Natural current_numerator = coeff.numerator().ABS_Z_N();
             Natural current_denominator = coeff.denominator();
 
@@ -120,20 +121,24 @@ std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
                 denominators.push_back(current_denominator);
         }
     }
-    // количество полученных уникальных ненулевых коэффициентов
-    int size = numerators.size();
-
     // ищем НОД и НОК
     Natural GCF = numerators[0];
     Natural LCM = denominators[0];
-    // если уникальных ненулевых коэффициентов больше одного
-    if (size > 1) {
-        for (int i = 1; i < size; i++) {
-            // ищем НОД текущего НОД и нового числа
+    // количество уникальных числителей
+    int n_size = numerators.size();
+    // количество уникальных знаменателей
+    int d_size = denominators.size();
+    // если уникальных числителей больше одного
+    if (n_size > 1) {
+        // ищем их НОД
+        for (int i = 1; i < n_size; i++)
             GCF = GCF.GCF_NN_N(numerators[i]);
-            // ищем НОК текущего НОК и нового числа
+    }
+    // если уникальных знаменателей больше одного
+    if (d_size > 1) {
+        // ищем их НОК
+        for (int i = 1; i < d_size; i++)
             LCM = LCM.LCM_NN_N(denominators[i]);
-        }
     }
 
     // преобразуем полученные НОД и НОК в рациональное число
@@ -149,6 +154,9 @@ std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
 
 // P-12
 Polynomial Polynomial::DER_P_P() const {
+    // если полином нулевой - ничего не делаем
+    if (!NZER_P_B())
+        return *this;
     // создаем нулевой полином степени на 1 меньше
     Polynomial result(m_ - 1);
     for (int i = 0; i <= result.m_; i++){
