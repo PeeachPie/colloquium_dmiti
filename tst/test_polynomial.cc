@@ -3,7 +3,7 @@
 
 TEST(PolynomialTest, Create_Default) {
     Polynomial p;
-    EXPECT_TRUE(p.NZER_P_B());
+    EXPECT_FALSE(p.NZER_P_B());
     // EXPECT_EQ(p.DEG_P_N(), 0); - метод DEG_P_N() еще не реализован
 }
 
