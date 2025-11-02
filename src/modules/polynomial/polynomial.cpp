@@ -132,11 +132,11 @@ Polynomial Polynomial::MUL_Pxk_P(int k) const {
 Rational Polynomial::LED_P_Q() const {
     if (m_ < 0 || c_.empty()) {
         // проверяем, не нулевой ли полином
-        return Rational(); 
+        return Rational();
     }
 
     for (int i = m_; i >= 0; --i) {
-        if (c_[i].as_string() != "0") {
+        if (c_[i].NZER_Q_B()) {
             return c_[i];
         }
     }
