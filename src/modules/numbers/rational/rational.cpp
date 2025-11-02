@@ -42,6 +42,10 @@ std::string Rational::as_string() const {
     return result;
 }
 
+bool Rational::NZER_Q_B() const {
+    return p_.ABS_Z_N().NZER_N_B();
+}
+
 // Q-1 | Сокращение дроби
 Rational &Rational::RED_Q_Q() {
     const Natural abs_numerator = p_.ABS_Z_N();

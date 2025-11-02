@@ -80,3 +80,5 @@ public:
 // Для удобного вывода в консоль
 
 std::ostream& operator << (std::ostream &os, const Natural &number);
+
+int operator == (const Natural &number1, const Natural &number2);
