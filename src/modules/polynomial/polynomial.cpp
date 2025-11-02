@@ -45,134 +45,71 @@ std::string Polynomial::as_string() const {
 
     return result;
 }
+// P-1 Сложение многочленов
+Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
+    Polynomial result;
+    int max_degree = std::max(m_, other.m_);
+    result.m_ = max_degree;
+    // степень результата будет наибольшей из степеней двух полиномов
+    result.c_.resize(max_degree + 1, Rational());
 
-bool Polynomial::NZER_P_B() const {
-    // проходимся по всем коэффициентам
-    for (Rational coeff : c_) {
-        // если нашли хотя бы один ненулевой,
-        // то полином ненулевой
-        if (coeff.NZER_Q_B())
-            return true;
+    for (int i = 0; i <= max_degree; ++i) {
+        Rational a = (i <= m_) ? c_[i] : Rational();
+        Rational b = (i <= other.m_) ? other.c_[i] : Rational();
+        // для каждой степени i берем коэффициенты обоих полиномов,
+        // если степени нет - считаем коэффициент 0
+        result.c_[i] = a.ADD_QQ_Q(b);
     }
-    // иначе нулевой
-    return false;
-}
 
-// P-3
-Polynomial Polynomial::MUL_PQ_P(const Rational& rational) const {
-    Polynomial result = *this;
-    // если полином ненулевой
-    if (result.NZER_P_B()) {
-        // умножаем каждый коэффициент исходного полинома
-        // на заданное число
-        for (auto& coeff : result.c_)
-            coeff = coeff.MUL_QQ_Q(rational);
-    }
     return result;
 }
 
-// P-4
-Polynomial Polynomial::MUL_Pxk_P(int k) const {
-    // если k меньше 0, то ошибка
-    if (k < 0)
-        throw std::invalid_argument("Степень должна быть натуральной или 0!");
-    // если степень множителя 0 или полином нулевой,
-    // то ничего не делаем
-    if (k == 0 || !NZER_P_B())
-        return *this;
-    // создаем нулевой полином нового размера
-    Polynomial result(m_ + k);
-    // переносим коэффициенты на k вправо
-    for (int i = 0; i <= m_; i++)
-        result.c_[i + k] = c_[i];
+// P-2 Вычитание многочленов
+Polynomial Polynomial::SUB_PP_P(const Polynomial& other) const {
+    Polynomial result;
+    int max_degree = std::max(m_, other.m_);
+    result.m_ = max_degree;
+    // степень результата будет наибольшей из степеней двух полиномов
+    result.c_.resize(max_degree + 1, Rational());
+
+
+    for (int i = 0; i <= max_degree; ++i) {
+        // проходимся по всем степеням 
+        Rational a = (i <= m_) ? c_[i] : Rational();
+        Rational b = (i <= other.m_) ? other.c_[i] : Rational();
+        // для каждой степени i берем коэффициенты обоих полиномов,
+        // если степени нет - считаем коэффициент 0
+        result.c_[i] = a.SUB_QQ_Q(b);
+    }
+
     return result;
 }
 
-// P-7
-std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
-    // если полином нулевой, то ошибка
-    if (!NZER_P_B())
-        throw std::invalid_argument("Полином нулевой!");
+// P-5 Старший коэффициент многочлена
+Rational Polynomial::LED_P_Q() const {
+    if (m_ < 0 || c_.empty()) {
+        // проверяем, не нулевой ли полином
+        return Rational(); 
+    }
+    return c_[m_];
+}
 
-    std::vector<Natural> numerators;
-    std::vector<Natural> denominators;
-    // проходимся по всем коэффициентам
-    for (Rational coeff : c_) {
-        // если коэффициент ненулевой,
-        if (coeff.NZER_Q_B()) {
-            // то получаем его числитель и знаменатель
-            Natural current_numerator = coeff.numerator().ABS_Z_N();
-            Natural current_denominator = coeff.denominator();
 
-            // если массивы пустые - просто добавляем значения
-            if (!numerators.size() && !denominators.size()) {
-                numerators.push_back(current_numerator);
-                denominators.push_back(current_denominator);
-                continue;
-            }
-
-            // иначе ищем числитель и знаменатель в массивах
-            auto cn_found{ std::find(numerators.begin(), numerators.end(), current_numerator) };
-            auto cd_found{ std::find(denominators.begin(), denominators.end(), current_denominator) };
-            // если таких чисел еще не было - добавляем
-            if (cn_found != numerators.end())
-                numerators.push_back(current_numerator);
-            if (cd_found != denominators.end())
-                denominators.push_back(current_denominator);
+// P-6 Степень многочлена
+Natural Polynomial::DEG_P_N() const {
+    for (int i = m_; i >= 0; --i) {
+        // проходимся по массиву коэффициентов c_ с конца
+        if (!(c_[i].INT_Q_B() && c_[i].numerator().SGN_Z_D() == 0)) {
+            // если коэффициент не равен нулю, возвращаем его индекс
+            return Natural(std::to_string(i));
         }
     }
-    // ищем НОД и НОК
-    Natural GCF = numerators[0];
-    Natural LCM = denominators[0];
-    // количество уникальных числителей
-    int n_size = numerators.size();
-    // количество уникальных знаменателей
-    int d_size = denominators.size();
-    // если уникальных числителей больше одного
-    if (n_size > 1) {
-        // ищем их НОД
-        for (int i = 1; i < n_size; i++)
-            GCF = GCF.GCF_NN_N(numerators[i]);
-    }
-    // если уникальных знаменателей больше одного
-    if (d_size > 1) {
-        // ищем их НОК
-        for (int i = 1; i < d_size; i++)
-            LCM = LCM.LCM_NN_N(denominators[i]);
-    }
-
-    // преобразуем полученные НОД и НОК в рациональное число
-    Rational GL = Rational(Integer(GCF.as_string()), LCM);
-
-    // делим каждый коэффициент полинома на полученную дробь
-    Polynomial result = *this;
-    for (auto& coeff : result.c_)
-        coeff = coeff.DIV_QQ_Q(GL);
-
-    return std::make_pair(GL, result);
+    return Natural("0"); 
+    // если ненулевых коэффициентов не найдено, 
+    // то возвращаем нулевой полином
 }
 
-// P-12
-Polynomial Polynomial::DER_P_P() const {
-    // если полином нулевой - ничего не делаем
-    if (!NZER_P_B())
-        return *this;
-    // создаем нулевой полином степени на 1 меньше
-    Polynomial result(m_ - 1);
-    for (int i = 0; i <= result.m_; i++){
-        // перемещаем коэффициенты исходного
-        // полинома на 1 влево
-        result.c_[i] = c_[i + 1];
-        // если текущий коэффициент не равен 0
-        if (result.c_[i].NZER_Q_B()) {
-            // преобразуем бывшую степень в рациональное число
-            Rational d = d.TRANS_Z_Q(Integer(std::to_string(i + 1)));
-            // домножаем коэффициент на бывшую степень
-            result.c_[i] = result.c_[i].MUL_QQ_Q(d);
-        }
-    }
-    return result;
-}
+
 
 Polynomial Polynomial::NORM_P_P() const {
     Polynomial result = *this;
