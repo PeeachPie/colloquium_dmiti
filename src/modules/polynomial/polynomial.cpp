@@ -154,6 +154,60 @@ std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
     return std::make_pair(GL, result);
 }
 
+// P-8 | Умножение двух многочленов
+Polynomial Polynomial::MUL_PP_P(const Polynomial& other) const {
+    if (!NZER_P_B() || !other.NZER_P_B())
+        return Polynomial();
+
+    int new_deg = m_ + other.m_;
+    Polynomial result(new_deg);
+
+    for (int i = 0; i <= m_; i++) {
+        for (int j = 0; j <= other.m_; j++) {
+            Rational prod = c_[i].MUL_QQ_Q(other.c_[j]);
+            result.c_[i + j] = result.c_[i + j].ADD_QQ_Q(prod);
+        }
+    }
+
+    return result.NORM_P_P();
+}
+
+// P-9 | Частное от деления многочлена на многочлен (с остатком)
+Polynomial Polynomial::DIV_PP_P(const Polynomial& other) const {
+    if (!other.NZER_P_B())
+        throw std::invalid_argument("Деление на нулевой многочлен недопустимо!");
+
+    Polynomial dividend = this->NORM_P_P();
+    Polynomial divisor  = other.NORM_P_P();
+
+    if (dividend.m_ < divisor.m_)
+        return Polynomial();
+
+    Polynomial quotient(dividend.m_ - divisor.m_);
+
+    while (dividend.m_ >= divisor.m_ && dividend.NZER_P_B()) {
+        int deg_diff = dividend.m_ - divisor.m_;
+        Rational factor = dividend.c_[dividend.m_].DIV_QQ_Q(divisor.c_[divisor.m_]);
+
+        quotient.c_[deg_diff] = quotient.c_[deg_diff].ADD_QQ_Q(factor);
+
+        Polynomial temp = divisor.MUL_PQ_P(factor).MUL_Pxk_P(deg_diff);
+        dividend = dividend.SUB_PP_P(temp).NORM_P_P();
+    }
+
+    return quotient.NORM_P_P();
+}
+
+// P-10 | Остаток от деления многочлена на многочлен
+Polynomial Polynomial::MOD_PP_P(const Polynomial& other) const {
+    if (!other.NZER_P_B())
+        throw std::invalid_argument("Деление на нулевой многочлен недопустимо!");
+
+    Polynomial quotient = this->DIV_PP_P(other);
+    Polynomial remainder = this->SUB_PP_P(other.MUL_PP_P(quotient));
+    return remainder.NORM_P_P();
+}
+
 // P-12
 Polynomial Polynomial::DER_P_P() const {
     // если полином нулевой - ничего не делаем
