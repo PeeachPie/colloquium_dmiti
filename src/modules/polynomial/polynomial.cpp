@@ -134,7 +134,14 @@ Rational Polynomial::LED_P_Q() const {
         // проверяем, не нулевой ли полином
         return Rational(); 
     }
-    return c_[m_];
+
+    for (int i = m_; i >= 0; --i) {
+        if (c_[i].as_string() != "0") {
+            return c_[i];
+        }
+    }
+    
+    return Rational();
 }
 
 // P-6 Степень многочлена
