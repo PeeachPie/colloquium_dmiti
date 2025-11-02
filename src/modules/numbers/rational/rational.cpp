@@ -42,6 +42,10 @@ std::string Rational::as_string() const {
     return result;
 }
 
+bool Rational::NZER_Q_B() const {
+    return p_.ABS_Z_N().NZER_N_B();
+}
+
 // Q-1 | Сокращение дроби
 Rational &Rational::RED_Q_Q() {
     const Natural abs_numerator = p_.ABS_Z_N();
@@ -83,6 +87,8 @@ Integer Rational::TRANS_Q_Z() const {
         throw std::invalid_argument("Рациональное число не является целым!");
     }
     return p_;
+}
+
 // Q-5 | Сложение дробей
 Rational Rational::ADD_QQ_Q(const Rational &other) const {
     Natural lcm_denominator = q_.LCM_NN_N(other.q_);
