@@ -19,6 +19,24 @@ private:
     std::vector<Rational> c_;
 
 public:
+    // конструктор по-умолчанию
+    Polynomial();
+
+    // конструктор, создает нулевой полином степени deg
+    Polynomial(int deg);
+
+    // конструктор, создает полином из набора коэффициентов и степеней к ним
+    Polynomial(std::vector<std::string>& coeffs, std::vector<int> degs);
+
+    // строковое представление полинома
+    std::string as_string() const;
+
+    // проверка двух подиномов на идентичность
+    bool EQ_PP_B(const Polynomial& other) const;
+
+    // проверка полинома на ноль
+    bool NZER_P_B() const;
+
     // P-1 | Сложение многочленов
     Polynomial ADD_PP_P(const Polynomial& other) const;
     
@@ -57,4 +75,9 @@ public:
     
     // P-13 | Преобразование многочлена — кратные корни в простые
     Polynomial NMR_P_P() const;
+
+    // нормирование полинома
+    Polynomial Polynomial::NORM_P_P() const;
 };
+
+std::ostream& operator << (std::ostream &os, const Polynomial& p);

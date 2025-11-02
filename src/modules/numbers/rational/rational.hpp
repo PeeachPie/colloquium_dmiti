@@ -25,6 +25,9 @@ public:
 
     [[nodiscard]] std::string as_string() const;
 
+    // проверка рационального числа на ноль
+    bool NZER_Q_B() const;
+
     // Q-1 | Сокращение дроби
     Rational &RED_Q_Q();
 
