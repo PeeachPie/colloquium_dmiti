@@ -60,6 +60,46 @@ bool Polynomial::NZER_P_B() const {
     return false;
 }
 
+// P-1 Сложение многочленов
+Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
+    Polynomial result;
+    int max_degree = std::max(m_, other.m_);
+    result.m_ = max_degree;
+    // степень результата будет наибольшей из степеней двух полиномов
+    result.c_.resize(max_degree + 1, Rational());
+
+    for (int i = 0; i <= max_degree; ++i) {
+        Rational a = (i <= m_) ? c_[i] : Rational();
+        Rational b = (i <= other.m_) ? other.c_[i] : Rational();
+        // для каждой степени i берем коэффициенты обоих полиномов,
+        // если степени нет - считаем коэффициент 0
+        result.c_[i] = a.ADD_QQ_Q(b);
+    }
+
+    return result;
+}
+
+// P-2 Вычитание многочленов
+Polynomial Polynomial::SUB_PP_P(const Polynomial& other) const {
+    Polynomial result;
+    int max_degree = std::max(m_, other.m_);
+    result.m_ = max_degree;
+    // степень результата будет наибольшей из степеней двух полиномов
+    result.c_.resize(max_degree + 1, Rational());
+
+
+    for (int i = 0; i <= max_degree; ++i) {
+        // проходимся по всем степеням 
+        Rational a = (i <= m_) ? c_[i] : Rational();
+        Rational b = (i <= other.m_) ? other.c_[i] : Rational();
+        // для каждой степени i берем коэффициенты обоих полиномов,
+        // если степени нет - считаем коэффициент 0
+        result.c_[i] = a.SUB_QQ_Q(b);
+    }
+
+    return result;
+}
+
 // P-3
 Polynomial Polynomial::MUL_PQ_P(const Rational& rational) const {
     Polynomial result = *this;
@@ -88,6 +128,36 @@ Polynomial Polynomial::MUL_Pxk_P(int k) const {
     for (int i = 0; i <= m_; i++)
         result.c_[i + k] = c_[i];
     return result;
+}
+
+// P-5 Старший коэффициент многочлена
+Rational Polynomial::LED_P_Q() const {
+    if (m_ < 0 || c_.empty()) {
+        // проверяем, не нулевой ли полином
+        return Rational();
+    }
+
+    for (int i = m_; i >= 0; --i) {
+        if (c_[i].NZER_Q_B()) {
+            return c_[i];
+        }
+    }
+    
+    return Rational();
+}
+
+// P-6 Степень многочлена
+Natural Polynomial::DEG_P_N() const {
+    for (int i = m_; i >= 0; --i) {
+        // проходимся по массиву коэффициентов c_ с конца
+        if (!(c_[i].INT_Q_B() && c_[i].numerator().SGN_Z_D() == 0)) {
+            // если коэффициент не равен нулю, возвращаем его индекс
+            return Natural(std::to_string(i));
+        }
+    }
+    return Natural("0"); 
+    // если ненулевых коэффициентов не найдено, 
+    // то возвращаем нулевой полином
 }
 
 // P-7

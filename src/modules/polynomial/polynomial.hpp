@@ -77,7 +77,7 @@ public:
     Polynomial NMR_P_P() const;
 
     // нормирование полинома
-    Polynomial Polynomial::NORM_P_P() const;
+    Polynomial NORM_P_P() const;
 };
 
 std::ostream& operator << (std::ostream &os, const Polynomial& p);
