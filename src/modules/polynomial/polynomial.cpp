@@ -279,6 +279,32 @@ Polynomial Polynomial::MOD_PP_P(const Polynomial& other) const {
     return remainder.NORM_P_P();
 }
 
+// P-11 | НОД многочленов (алгоритм Евклида)
+Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
+    Polynomial a = this->NORM_P_P();
+    Polynomial b = other.NORM_P_P();
+
+    if (!a.NZER_P_B() && !b.NZER_P_B()) {
+        return Polynomial();
+    }
+    if (!a.NZER_P_B()) {
+        return b;
+    }
+    if (!b.NZER_P_B()) {
+        return a;
+    }
+    
+    // алгоритм Евклида: НОД(a, b) = НОД(b, a mod b)
+    while (b.NZER_P_B()) { // пока остаток не станет нулевым
+        const Polynomial remainder = a.MOD_PP_P(b);
+        a = b;
+        b = remainder;
+    }
+    
+    // последний ненулевой остаток = НОД
+    return a;
+}
+
 // P-12
 Polynomial Polynomial::DER_P_P() const {
     // если полином нулевой - ничего не делаем
