@@ -46,6 +46,11 @@ bool Rational::NZER_Q_B() const {
     return p_.ABS_Z_N().NZER_N_B();
 }
 
+bool Rational::EQ_QQ_B(const Rational& other) const {
+    const Rational diff = this->SUB_QQ_Q(other);
+    return !diff.NZER_Q_B();
+}
+
 // Q-1 | Сокращение дроби
 Rational &Rational::RED_Q_Q() {
     const Natural abs_numerator = p_.ABS_Z_N();
@@ -174,4 +179,8 @@ Rational Rational::DIV_QQ_Q(const Rational &other) const {
 
 std::ostream &operator<<(std::ostream &os, const Rational &rational) {
     return os << rational.as_string();
+}
+
+bool operator==(const Rational &r1, const Rational &r2) {
+    return r1.EQ_QQ_B(r2);
 }

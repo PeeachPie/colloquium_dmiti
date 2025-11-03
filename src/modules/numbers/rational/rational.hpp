@@ -28,6 +28,9 @@ public:
     // проверка рационального числа на ноль
     bool NZER_Q_B() const;
 
+    // Проверка двух рациональных чисел на равенство
+    [[nodiscard]] bool EQ_QQ_B(const Rational& other) const;
+
     // Q-1 | Сокращение дроби
     Rational &RED_Q_Q();
 
@@ -54,3 +57,5 @@ public:
 };
 
 std::ostream &operator<<(std::ostream &os, const Rational &rational);
+
+bool operator==(const Rational &r1, const Rational &r2);
