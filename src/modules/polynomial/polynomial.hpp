@@ -2,6 +2,10 @@
 
 #include "rational.hpp"
 
+#include <iostream>
+#include <string>
+#include <map>
+
 /*
  *   класс многочленов над рациональными числами
  */
@@ -13,20 +17,19 @@ private:
     /*
      *  массив коэфициентов полинома
      *   
-     *  с_[0] - коэфициент при x^0
-     *  с_[m] - коэфициент при x^m
+     *  с_[i] - коэфициент при x^i
      */
-    std::vector<Rational> c_;
+    std::map<int, Rational, std::greater<int>> c_;
 
 public:
     // конструктор по-умолчанию
     Polynomial();
 
     // конструктор, создает нулевой полином степени deg
-    Polynomial(int deg);
+    // Polynomial(int deg);
 
     // конструктор, создает полином из набора коэффициентов и степеней к ним
-    Polynomial(std::vector<std::string>& coeffs, std::vector<int> degs);
+    Polynomial(std::vector<std::pair<int, std::string>> polynomial);
 
     // строковое представление полинома
     [[nodiscard]] std::string as_string() const;
@@ -61,7 +64,7 @@ public:
     // P-8 | Умножение многочленов
     [[nodiscard]] Polynomial MUL_PP_P(const Polynomial& other) const;
     
-    // P-9 |Частное от деления многочлена на многочлен при делении с остатком
+    // P-9 | Частное от деления многочлена на многочлен при делении с остатком
     [[nodiscard]] Polynomial DIV_PP_P(const Polynomial& other) const;
     
     // P-10 | Остаток от деления многочлена на многочлен при делении с остатком

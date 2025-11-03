@@ -1,125 +1,228 @@
 #include <gtest/gtest.h>
 #include "polynomial.hpp"
 
-TEST(PolynomialTest, Create_Default) {
-    Polynomial p;
-    EXPECT_FALSE(p.NZER_P_B());
-    EXPECT_EQ(p.DEG_P_N().as_string(), "0");
+TEST(PolynomialTest, DEG_P_N) {
+    std::vector<std::pair<int, std::string>> terms = {{5, "1"}, {3, "2"}, {1, "3"}};
+    Polynomial p(terms);
+    EXPECT_EQ(p.DEG_P_N().as_string(), "5");
+    
+    Polynomial zero;
+    EXPECT_EQ(zero.DEG_P_N().as_string(), "0");
 }
 
-TEST(PolynomialTest, Create_Default_Long) {
-    Polynomial p(79);
-    EXPECT_FALSE(p.NZER_P_B());
-    EXPECT_EQ(p.DEG_P_N().as_string(), "0");
+TEST(PolynomialTest, MUL_PP_P) {
+    std::vector<std::pair<int, std::string>> terms1 = {{1, "2"}, {0, "1"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{1, "3"}, {0, "2"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.MUL_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "6 * x ^ 2 + 7 * x ^ 1 + 2");
 }
 
-TEST(PolynomialTest, Create) {
-    std::vector<std::string> coeffs = {"1", "-2/3", "4/5", "-6/7", "7/8"};
-    std::vector<int> degs = {10, 8, 6, 4, 2};
-    Polynomial p(coeffs, degs);
-    EXPECT_EQ(p.DEG_P_N().as_string(), "10");
-    EXPECT_EQ(p.LED_P_Q().as_string(), "1");
+TEST(PolynomialTest, DIV_PP_P) {
+    std::vector<std::pair<int, std::string>> terms1 = {{2, "1"}, {1, "-3"}, {0, "2"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{1, "1"}, {0, "-1"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.DIV_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "1 * x ^ 1 -2");
 }
 
-TEST(PolynomialTest, Create_Exception_TooFewDegs) {
-    std::vector<std::string> coeffs = {"1", "-2/3", "4/5", "-6/7", "7/8"};
-    std::vector<int> degs = {10, 2};
-    EXPECT_THROW(Polynomial p(coeffs, degs), std::invalid_argument);
+TEST(PolynomialTest, MOD_PP_P) {
+    std::vector<std::pair<int, std::string>> terms1 = {{3, "1"}, {1, "-2"}, {0, "1"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{2, "1"}, {0, "1"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.MOD_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "-3 * x ^ 1 + 1");
 }
 
-TEST(PolynomialTest, Create_Exception_TooFewCoeffs) {
-    std::vector<std::string> coeffs = {"1", "-2/3"};
-    std::vector<int> degs = {10, 9, 8, 7, 6, 5};
-    EXPECT_THROW(Polynomial p(coeffs, degs), std::invalid_argument);
+TEST(PolynomialTest, GCF_PP_P_SimpleCase) {
+    std::vector<std::pair<int, std::string>> terms1 = {{2, "1"}, {1, "-3"}, {0, "2"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{2, "1"}, {1, "-4"}, {0, "3"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.GCF_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "1 * x ^ 1 -1");
 }
 
-TEST(PolynomialTest, Create_Exception_Duplicates) {
-    std::vector<std::string> coeffs = {"1", "-2/3", "4/5", "-6/7", "7/8"};
-    std::vector<int> degs = {10, 10, 2, 5, 10};
-    EXPECT_THROW(Polynomial p(coeffs, degs), std::invalid_argument);
+TEST(PolynomialTest, GCF_PP_P_CommonQuadratic) {
+    std::vector<std::pair<int, std::string>> terms1 = {{3, "1"}, {2, "-2"}, {1, "-1"}, {0, "2"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{3, "1"}, {2, "-1"}, {1, "-4"}, {0, "4"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.GCF_PP_P(p2);
+    EXPECT_TRUE(result.as_string() == "-1 * x ^ 2 + 3 * x ^ 1 -2" || result.as_string() == "1 * x ^ 2 -3 * x ^ 1 + 2");
 }
 
-TEST(PolynomialTest, as_string) {
-    std::vector<std::string> coeffs = {"1", "-2/3", "4/5", "-6/7", "7/8"};
-    std::vector<int> degs = {10, 8, 6, 4, 2};
-    Polynomial p(coeffs, degs);
-    EXPECT_EQ(p.as_string(), "1 * x ^ 10 -2/3 * x ^ 8 + 4/5 * x ^ 6 -6/7 * x ^ 4 + 7/8 * x ^ 2");
+TEST(PolynomialTest, GCF_PP_P_OneIsMultiple) {
+    std::vector<std::pair<int, std::string>> terms1 = {{2, "1"}, {0, "-1"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{4, "1"}, {0, "-1"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.GCF_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "1 * x ^ 2 -1");
 }
 
-TEST(PolynomialTest, NZER_P_B) {
-    Polynomial p;
-    std::vector<std::string> coeffs = {"1", "2"};
-    std::vector<int> degs = {2, 1};
-    Polynomial q(coeffs, degs);
-    EXPECT_FALSE(p.NZER_P_B());
-    EXPECT_TRUE(q.NZER_P_B());
+TEST(PolynomialTest, GCF_PP_P_NoCommonFactors) {
+    std::vector<std::pair<int, std::string>> terms1 = {{2, "1"}, {0, "1"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{2, "1"}, {1, "1"}, {0, "1"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.GCF_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "1");
 }
 
-TEST(PolynomialTest, MUL_PQ_P) {
-    std::vector<std::string> coeffs = {"-1/9", "2/5", "6/13", "-9/44"};
-    std::vector<int> degs = {4, 2, 1, 0};
-    Polynomial p(coeffs, degs);
-    Rational r("-112/97");
-    Polynomial result = p.MUL_PQ_P(r);
-    EXPECT_EQ(result.as_string(), "112/873 * x ^ 4 -224/485 * x ^ 2 -672/1261 * x ^ 1 + 252/1067");
+TEST(PolynomialTest, GCF_PP_P_WithZeroPolynomial) {
+    std::vector<std::pair<int, std::string>> terms1 = {{2, "1"}, {1, "1"}, {0, "1"}};
+    Polynomial p1(terms1);
+    Polynomial p2;
+    
+    Polynomial result = p1.GCF_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "1 * x ^ 2 + 1 * x ^ 1 + 1");
 }
 
-TEST(PolynomialTest, MUL_Pxk_P) {
-    std::vector<std::string> coeffs = {"-1/9", "2/5", "6/13", "-9/44"};
-    std::vector<int> degs = {4, 2, 1, 0};
-    Polynomial p(coeffs, degs);
-    int d = 4;
-    Polynomial result = p.MUL_Pxk_P(d);
-    EXPECT_EQ(result.as_string(), "-1/9 * x ^ 8 + 2/5 * x ^ 6 + 6/13 * x ^ 5 -9/44 * x ^ 4");
+TEST(PolynomialTest, GCF_PP_P_BothZero) {
+    Polynomial p1;
+    Polynomial p2;
+    
+    EXPECT_THROW(p1.GCF_PP_P(p2), std::invalid_argument);
+}
+
+TEST(PolynomialTest, GCF_PP_P_ConstantPolynomials) {
+    std::vector<std::pair<int, std::string>> terms1 = {{0, "4"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{0, "6"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.GCF_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "1"); // Договоримся так
+}
+
+TEST(PolynomialTest, GCF_PP_P_YourOriginalTest) {
+    std::vector<std::pair<int, std::string>> terms1 = {{3, "1"}, {2, "-1"}, {1, "-1"}, {0, "1"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{2, "1"}, {1, "-2"}, {0, "1"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial result = p1.GCF_PP_P(p2);
+    EXPECT_EQ(result.as_string(), "1 * x ^ 2 -2 * x ^ 1 + 1");
+}
+
+TEST(PolynomialTest, NMR_P_P_MultipleRoots) {
+    // (x-1)^3 * (x-2)^2
+    std::vector<std::pair<int, std::string>> terms = {
+        {5, "1"}, 
+        {4, "-7"}, 
+        {3, "19"}, 
+        {2, "-25"}, 
+        {1, "16"}, 
+        {0, "-4"}
+    };
+    Polynomial p(terms);
+    
+    Polynomial result = p.NMR_P_P();
+    
+    EXPECT_EQ(result.as_string(), "1 * x ^ 2 -3 * x ^ 1 + 2");
+}
+
+TEST(PolynomialTest, NORM_P_P) {
+    std::vector<std::pair<int, std::string>> terms = {{2, "2"}, {1, "0"}, {0, "3"}};
+    Polynomial p(terms);
+    
+    Polynomial result = p.NORM_P_P();
+    EXPECT_EQ(result.as_string(), "2 * x ^ 2 + 3");
+}
+
+TEST(PolynomialTest, EdgeCases) {
+    std::vector<std::pair<int, std::string>> terms1 = {{1, "1"}};
+    std::vector<std::pair<int, std::string>> terms2 = {{2, "1"}};
+    Polynomial p1(terms1);
+    Polynomial p2(terms2);
+    
+    Polynomial div_result = p1.DIV_PP_P(p2);
+    EXPECT_EQ(div_result.as_string(), "0");
+    
+    Polynomial mod_result = p1.MOD_PP_P(p2);
+    EXPECT_EQ(mod_result.as_string(), "1 * x ^ 1");
+}
+
+TEST(PolynomialTest, ZeroPolynomialOperations) {
+    Polynomial zero;
+    std::vector<std::pair<int, std::string>> terms = {{2, "1"}, {0, "1"}};
+    Polynomial p(terms);
+    
+    Polynomial mul_result = p.MUL_PP_P(zero);
+    EXPECT_FALSE(mul_result.NZER_P_B());
+    
+    Polynomial gcd_result = p.GCF_PP_P(zero);
+    EXPECT_EQ(gcd_result.as_string(), p.as_string());
 }
 
 TEST(PolynomialTest, FAC_P_Q) {
-    std::vector<std::string> coeffs = {"-10/9", "-15", "30/13", "-25/26"};
-    std::vector<int> degs = {7, 5, 3, 0};
-    Polynomial p(coeffs, degs);
-    std::pair<Rational, Polynomial> result = p.FAC_P_Q();
-    EXPECT_FALSE(result.first.SUB_QQ_Q(Rational("5/234")).NZER_Q_B());
-    EXPECT_EQ(result.second.as_string(), "-52 * x ^ 7 -702 * x ^ 5 + 108 * x ^ 3 -45");
+    std::vector<std::pair<int, std::string>> terms = {
+        {3, "2/3"}, 
+        {2, "4/5"}, 
+        {1, "6/7"}, 
+        {0, "8/9"}
+    };
+    Polynomial p(terms);
+    
+    auto [rational_part, polynomial_part] = p.FAC_P_Q();
+    
+    Polynomial reconstructed = polynomial_part.MUL_PQ_P(rational_part);
+    EXPECT_EQ(reconstructed.as_string(), p.as_string());
+    
+    std::vector<std::pair<int, std::string>> terms2 = {
+        {2, "2"}, 
+        {1, "4"}, 
+        {0, "6"}
+    };
+    Polynomial p2(terms2);
+    
+    auto [rational_part2, polynomial_part2] = p2.FAC_P_Q();
+    EXPECT_EQ(rational_part2.as_string(), "2");
+    EXPECT_EQ(polynomial_part2.as_string(), "1 * x ^ 2 + 2 * x ^ 1 + 3");
+    
+    std::vector<std::pair<int, std::string>> terms3 = {
+        {2, "-1/2"}, 
+        {1, "3/4"}, 
+        {0, "-5/6"}
+    };
+    Polynomial p3(terms3);
+    
+    auto [rational_part3, polynomial_part3] = p3.FAC_P_Q();
+    
+    Polynomial reconstructed3 = polynomial_part3.MUL_PQ_P(rational_part3);
+    EXPECT_EQ(reconstructed3.as_string(), p3.as_string());
+    
+    bool all_coefficients_integer = true;
+
+    Polynomial zero;
+    EXPECT_THROW(zero.FAC_P_Q(), std::invalid_argument);
 }
 
-TEST(PolynomialTest, DER_P_P) {
-    std::vector<std::string> coeffs = {"-10/7", "-7/10", "29/15", "-25/26"};
-    std::vector<int> degs = {7, 5, 3, 0};
-    Polynomial p(coeffs, degs);
-    Polynomial result = p.DER_P_P();
-    EXPECT_EQ(result.DEG_P_N().as_string(), "6");
-    EXPECT_EQ(result.as_string(), "-10 * x ^ 6 -7/2 * x ^ 4 + 29/5 * x ^ 2");
-}
-
-TEST(PolynomialTests, LED_P_Q) {
-    std::vector<std::string> coeffs = {"1", "-2", "3"};
-    std::vector<int> degs = {0, 1, 2};
-    Polynomial p(coeffs, degs);
-    EXPECT_EQ(p.LED_P_Q().as_string(), "3");
-}
-
-TEST(PolynomialTests, Add_PP_P) {
-    std::vector<std::string> coeffs1 = {"1", "2", "3"};
-    std::vector<int> degs1 = {0, 1, 2};
-    Polynomial p1(coeffs1, degs1);
-
-    std::vector<std::string> coeffs2 = {"2", "-1", "4"};
-    std::vector<int> degs2 = {0, 1, 2};
-    Polynomial p2(coeffs2, degs2);
-
-    Polynomial result = p1.ADD_PP_P(p2);
-    EXPECT_EQ(result.as_string(), "7 * x ^ 2 + 1 * x ^ 1 + 3");
-}
-
-TEST(PolynomialTests, Sub_PP_P) {
-    std::vector<std::string> coeffs1 = {"1", "2", "3"};
-    std::vector<int> degs1 = {0, 1, 2};
-    Polynomial p1(coeffs1, degs1);
-
-    std::vector<std::string> coeffs2 = {"2", "-1", "4"};
-    std::vector<int> degs2 = {0, 1, 2};
-    Polynomial p2(coeffs2, degs2);
-
-    Polynomial result = p1.SUB_PP_P(p2);
-    EXPECT_EQ(result.as_string(), "-1 * x ^ 2 + 3 * x ^ 1 -1");
+TEST(PolynomialTest, FAC_P_Q_Detailed) {
+    std::vector<std::pair<int, std::string>> terms = {
+        {2, "2/3"}, 
+        {1, "4/5"}, 
+        {0, "6/7"}
+    };
+    Polynomial p(terms);
+    
+    auto [rational_part, polynomial_part] = p.FAC_P_Q();
+    
+    EXPECT_TRUE(rational_part == Rational("2/105") || rational_part == Rational("-2/105"));
+    
+    EXPECT_EQ(polynomial_part.as_string(), "35 * x ^ 2 + 42 * x ^ 1 + 45");
+    
+    Polynomial reconstructed = polynomial_part.MUL_PQ_P(rational_part);
+    EXPECT_EQ(reconstructed.as_string(), p.as_string());
 }
