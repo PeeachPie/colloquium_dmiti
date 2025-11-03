@@ -42,6 +42,8 @@ std::string Polynomial::as_string() const {
 
     if (c_[m_].numerator().SGN_Z_D() == 1)
         result = result.substr(2, result.length());
+    if (result[result.length() - 1] == ' ') 
+        result.pop_back();
 
     return result;
 }
