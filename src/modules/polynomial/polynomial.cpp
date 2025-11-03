@@ -327,6 +327,29 @@ Polynomial Polynomial::DER_P_P() const {
     return result;
 }
 
+// P-13 | Преобразование многочлена — кратные корни в простые
+// Алгоритм: P_new = P / НОД(P, P')
+Polynomial Polynomial::NMR_P_P() const {
+    if (!NZER_P_B() || m_ == 0) {
+        return *this;
+    }
+
+    const Polynomial derivative = this->DER_P_P();
+    if (!derivative.NZER_P_B()) {
+        return *this;
+    }
+
+    Polynomial gcd = this->GCF_PP_P(derivative);
+    if (!gcd.NZER_P_B()) {
+        return *this;
+    }
+    
+    // делим исходный полином на НОД (убираем кратные корни)
+    const Polynomial result = this->DIV_PP_P(gcd);
+    
+    return result.NORM_P_P();
+}
+
 Polynomial Polynomial::NORM_P_P() const {
     Polynomial result = *this;
 
