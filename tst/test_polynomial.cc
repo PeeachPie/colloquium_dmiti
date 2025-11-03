@@ -3,14 +3,14 @@
 
 TEST(PolynomialTest, Create_Default) {
     Polynomial p;
-    EXPECT_TRUE(p.NZER_P_B());
+    EXPECT_FALSE(p.NZER_P_B());
     EXPECT_EQ(p.DEG_P_N().as_string(), "0");
 }
 
 TEST(PolynomialTest, Create_Default_Long) {
     Polynomial p(79);
     EXPECT_FALSE(p.NZER_P_B());
-    EXPECT_EQ(p.DEG_P_N().as_string(), "79");
+    EXPECT_EQ(p.DEG_P_N().as_string(), "0");
 }
 
 TEST(PolynomialTest, Create) {

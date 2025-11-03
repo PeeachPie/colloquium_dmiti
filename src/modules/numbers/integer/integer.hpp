@@ -21,7 +21,7 @@ public:
 
     std::string as_string() const;
 
-    // Z-0
+    // Z-0 Сравнение целых чисел
     int COM_ZZ_D(const Integer &other) const;
 
     // Z-1 Абсолютная величина числа, результат - натуральное

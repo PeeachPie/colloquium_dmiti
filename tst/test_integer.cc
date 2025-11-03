@@ -156,6 +156,7 @@ TEST(IntegerTests, MOD_ZZ_Z_Integers){
     Integer ctd = c.MOD_ZZ_Z(d);
     Integer r1("10"); Integer r2("5");
     Integer r3("5"); Integer r4("10");
+    std::cout << a << '%' << b << '=' << atb << '\n';
     EXPECT_EQ(r1.COM_ZZ_D(atb), 0);
     EXPECT_EQ(r2.COM_ZZ_D(atd), 0);
     EXPECT_EQ(r3.COM_ZZ_D(ctb), 0);

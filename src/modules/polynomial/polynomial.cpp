@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 
-Polynomial::Polynomial(): m_(0), c_({}) {}
+Polynomial::Polynomial(): m_(0), c_({Rational()}) {}
 
 Polynomial::Polynomial(int deg) {
     m_ = deg;
