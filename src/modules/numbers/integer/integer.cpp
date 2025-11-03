@@ -43,10 +43,13 @@ int Integer::COM_ZZ_D(const Integer& other) const {
             return 0;
     // иначе больше то, которое положительно
     } else {
-        if (s_)
-            return -1;
-        else
-            return 1;
+        if (SGN_Z_D() && other.SGN_Z_D()) {
+            if (s_)
+                return -1;
+            else
+                return 1;
+        } else
+            return 0;
     }
 }
 
@@ -102,11 +105,11 @@ Integer Integer::ADD_ZZ_Z(const Integer& other) const{
     } else {
         // если слагаемые разных знаков и ->
         // знак берем от большего по модулю числа
-        if (m_.COM_NN_D(other.m_) != 1){
-            //-> модуль первого не меньше модуля второго
+        if (m_.COM_NN_D(other.m_) == 2){
+            //-> модуль первого больше модуля второго
             result = result.TRANS_N_Z(m_.SUB_NN_N(other.m_));
             result.s_ = s_;
-        } else {
+        } else if (m_.COM_NN_D(other.m_) == 1) {
             //-> модуль первого меньше модуля второго
             result = result.TRANS_N_Z((other.m_).SUB_NN_N(m_));
             result.s_ = other.s_;
@@ -127,11 +130,11 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const{
     } else {
         // если уменьшаемое и вычитаемое одного знака и ->
         // знак берем от большего по модулю числа
-        if (m_.COM_NN_D(other.m_) != 1){
+        if (m_.COM_NN_D(other.m_) == 2){
             //-> модуль уменьшаемого не меньше модуля вычитаемого
             result = result.TRANS_N_Z(m_.SUB_NN_N(other.m_));
             result.s_ = s_;
-        } else {
+        } else if (m_.COM_NN_D(other.m_) == 1) {
             //-> модуль уменьшаемого меньше модуля вычитаемого
             result = result.TRANS_N_Z((other.m_).SUB_NN_N(m_));
             result.s_ = other.s_;
@@ -143,6 +146,10 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const{
 
 //Z-8
 Integer Integer::MUL_ZZ_Z(const Integer& other) const{
+    // если хотя бы один из множителей нулевой,
+    // то возвращаем 0
+    if (!m_.NZER_N_B() || !other.m_.NZER_N_B())
+        return Integer();
     // перемножаем модули множителей
     Integer result = result.TRANS_N_Z(m_.MUL_NN_N(other.m_));
     // если знаки множителей различны,
@@ -158,6 +165,9 @@ Integer Integer::DIV_ZZ_Z(const Integer& other) const {
     // если делитель равен 0
     if (!other.m_.NZER_N_B())
         throw std::invalid_argument("Делитель должен быть отличен от нуля!");
+    // если делимое равно 0
+    if (!m_.NZER_N_B())
+        return *this;
     // делим модуль делимого на модуль делителя
     Integer div = div.TRANS_N_Z(m_.DIV_NN_N(other.m_));
     // находим остаток от деления модуля делимого
@@ -180,8 +190,26 @@ Integer Integer::MOD_ZZ_Z(const Integer& other) const {
     // если делитель равен 0
     if (!other.m_.NZER_N_B())
         throw std::invalid_argument("Делитель должен быть отличен от нуля!");
-    // находим остаток
-    Integer remain = remain.TRANS_N_Z(m_.MOD_NN_N(other.m_));
+    // если делимое равно нулю, то ничего не делаем
+    if (!m_.NZER_N_B())
+        return *this;
+    Integer remain;
+    // если знаки делимого и делителя одинаковы,
+    // то остаток ищем как для натуральных
+    if (s_ == other.s_)
+        remain = remain.TRANS_N_Z(m_.MOD_NN_N(other.m_));
+    else {
+        // иначе находим отрицательное неполное частное
+        Integer div = DIV_ZZ_Z(other);
+        // находим произведение делителя и неполного частного
+        Integer closest_max = div.MUL_ZZ_Z(other);
+        // так как делимое и делитель разных знаков, то
+        // closest_max по модулю будет больше, чем модуль делимого;
+        // поэтому вычитаем из модуля полученного произведения модуль делимого
+        Natural result = (closest_max.ABS_Z_N()).SUB_NN_N(this->ABS_Z_N());
+        // конвертируем остаток из натурального в целое
+        remain = remain.TRANS_N_Z(result);
+    }
     return remain;
 }
 
