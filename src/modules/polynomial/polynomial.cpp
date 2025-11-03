@@ -1,4 +1,5 @@
 #include "polynomial.hpp"
+#include <iostream>
 #include <string>
 #include <map>
 
@@ -187,9 +188,9 @@ std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
             auto cn_found{ std::find(numerators.begin(), numerators.end(), current_numerator) };
             auto cd_found{ std::find(denominators.begin(), denominators.end(), current_denominator) };
             // если таких чисел еще не было - добавляем
-            if (cn_found != numerators.end())
+            if (cn_found == numerators.end())
                 numerators.push_back(current_numerator);
-            if (cd_found != denominators.end())
+            if (cd_found == denominators.end())
                 denominators.push_back(current_denominator);
         }
     }
