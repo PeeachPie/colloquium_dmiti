@@ -15,8 +15,6 @@ Polynomial::Polynomial(std::vector<std::pair<int, std::string>> polynomial) {
     Polynomial clean = this->NORM_P_P();
 
     m_ = clean.m_;
-
-    std::cout << "deg=" << m_ << '\n';
     c_ = clean.c_;
 }
 
@@ -25,7 +23,6 @@ std::string Polynomial::as_string() const {
 
     std::string result;
     for (auto &p: clean.c_) {
-        std::cout << p.second << '\n';
         if (p.second.NZER_Q_B()) {
             if (p.second.numerator().SGN_Z_D() == 1)
                 result += "+ ";
@@ -40,11 +37,13 @@ std::string Polynomial::as_string() const {
     if (result[result.length() - 1] == ' ') 
         result.pop_back();
 
+    if (result == "") result = "0";
+
     return result;
 }
 
 bool Polynomial::NZER_P_B() const {
-    return DEG_P_N().COM_NN_D(Natural());
+    return LED_P_Q().NZER_Q_B();
 }
 
 bool Polynomial::EQ_PP_B(const Polynomial& other) const {
@@ -120,17 +119,17 @@ Polynomial Polynomial::MUL_PQ_P(const Rational& rational) const {
 // P-4
 Polynomial Polynomial::MUL_Pxk_P(int k) const {
     // если k меньше 0, то ошибка
-    if (k > m_)
-        throw std::invalid_argument("Нельзя сокращать на степени больше степени полинома");
+    if (k < 0)
+        throw std::invalid_argument("Нельзя домножить на отрицательную степень");
     // если степень множителя 0 или полином нулевой,
     // то ничего не делаем
     if (k == 0 || !NZER_P_B())
         return *this;
-    // создаем нулевой полином нового размера
+
     Polynomial result;
-    // меняем степени на k
+    // увеличиваем степени на k
     for (auto &p: c_)
-        result.c_.insert({ p.first + k, p.second });
+        result.c_[p.first + k] = p.second;
 
     return result;
 }
@@ -236,7 +235,9 @@ Polynomial Polynomial::MOD_PP_P(const Polynomial& other) const {
         throw std::invalid_argument("Деление на нулевой многочлен недопустимо!");
 
     Polynomial quotient = this->DIV_PP_P(other);
-    Polynomial remainder = this->SUB_PP_P(other.MUL_PP_P(quotient));
+    Polynomial product = other.MUL_PP_P(quotient);
+    Polynomial remainder = this->SUB_PP_P(product);
+    
     return remainder.NORM_P_P();
 }
 
@@ -244,16 +245,6 @@ Polynomial Polynomial::MOD_PP_P(const Polynomial& other) const {
 Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
     Polynomial a = this->NORM_P_P();
     Polynomial b = other.NORM_P_P();
-
-    if (!a.NZER_P_B() && !b.NZER_P_B()) {
-        return Polynomial();
-    }
-    if (!a.NZER_P_B()) {
-        return b;
-    }
-    if (!b.NZER_P_B()) {
-        return a;
-    }
     
     // алгоритм Евклида: НОД(a, b) = НОД(b, a mod b)
     while (b.NZER_P_B()) { // пока остаток не станет нулевым
@@ -262,8 +253,11 @@ Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
         b = remainder;
     }
     
+    Rational sgn = Rational::TRANS_Z_Q(
+        Integer(std::to_string(a.LED_P_Q().numerator().SGN_Z_D()))
+    );
     // последний ненулевой остаток = НОД
-    return a;
+    return a.FAC_P_Q().second.MUL_PQ_P(sgn);
 }
 
 // P-12
@@ -278,11 +272,10 @@ Polynomial Polynomial::DER_P_P() const {
         // переводим степень в рациоанальное число
         Rational d = Rational::TRANS_Z_Q(Integer(std::to_string(p.first)));
 
-        result.c_.insert({
-            p.first - 1, 
-            p.second.MUL_QQ_Q(d)
-        });
+        result.c_[p.first - 1] = p.second.MUL_QQ_Q(d);
     }
+
+    result.m_ = clean.m_ - 1;
 
     return result;
 }
@@ -295,14 +288,8 @@ Polynomial Polynomial::NMR_P_P() const {
     }
 
     const Polynomial derivative = this->DER_P_P();
-    if (!derivative.NZER_P_B()) {
-        return *this;
-    }
 
     Polynomial gcd = this->GCF_PP_P(derivative);
-    if (!gcd.NZER_P_B()) {
-        return *this;
-    }
     
     // делим исходный полином на НОД (убираем кратные корни)
     const Polynomial result = this->DIV_PP_P(gcd);

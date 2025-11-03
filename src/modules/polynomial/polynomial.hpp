@@ -64,7 +64,7 @@ public:
     // P-8 | Умножение многочленов
     [[nodiscard]] Polynomial MUL_PP_P(const Polynomial& other) const;
     
-    // P-9 |Частное от деления многочлена на многочлен при делении с остатком
+    // P-9 | Частное от деления многочлена на многочлен при делении с остатком
     [[nodiscard]] Polynomial DIV_PP_P(const Polynomial& other) const;
     
     // P-10 | Остаток от деления многочлена на многочлен при делении с остатком
