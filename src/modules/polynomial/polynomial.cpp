@@ -1,4 +1,5 @@
 #include "polynomial.hpp"
+#include <iostream>
 #include <string>
 #include <map>
 
@@ -58,6 +59,23 @@ bool Polynomial::NZER_P_B() const {
     }
     // иначе нулевой
     return false;
+}
+
+bool Polynomial::EQ_PP_B(const Polynomial& other) const {
+    Polynomial p1 = this->NORM_P_P();
+    Polynomial p2 = other.NORM_P_P();
+    
+    if (p1.m_ != p2.m_) {
+        return false;
+    }
+    
+    for (int i = 0; i <= p1.m_; ++i) {
+        if (!p1.c_[i].EQ_QQ_B(p2.c_[i])) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 // P-1 Сложение многочленов
@@ -187,9 +205,9 @@ std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
             auto cn_found{ std::find(numerators.begin(), numerators.end(), current_numerator) };
             auto cd_found{ std::find(denominators.begin(), denominators.end(), current_denominator) };
             // если таких чисел еще не было - добавляем
-            if (cn_found != numerators.end())
+            if (cn_found == numerators.end())
                 numerators.push_back(current_numerator);
-            if (cd_found != denominators.end())
+            if (cd_found == denominators.end())
                 denominators.push_back(current_denominator);
         }
     }
@@ -278,6 +296,32 @@ Polynomial Polynomial::MOD_PP_P(const Polynomial& other) const {
     return remainder.NORM_P_P();
 }
 
+// P-11 | НОД многочленов (алгоритм Евклида)
+Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
+    Polynomial a = this->NORM_P_P();
+    Polynomial b = other.NORM_P_P();
+
+    if (!a.NZER_P_B() && !b.NZER_P_B()) {
+        return Polynomial();
+    }
+    if (!a.NZER_P_B()) {
+        return b;
+    }
+    if (!b.NZER_P_B()) {
+        return a;
+    }
+    
+    // алгоритм Евклида: НОД(a, b) = НОД(b, a mod b)
+    while (b.NZER_P_B()) { // пока остаток не станет нулевым
+        const Polynomial remainder = a.MOD_PP_P(b);
+        a = b;
+        b = remainder;
+    }
+    
+    // последний ненулевой остаток = НОД
+    return a;
+}
+
 // P-12
 Polynomial Polynomial::DER_P_P() const {
     // если полином нулевой - ничего не делаем
@@ -298,6 +342,29 @@ Polynomial Polynomial::DER_P_P() const {
         }
     }
     return result;
+}
+
+// P-13 | Преобразование многочлена — кратные корни в простые
+// Алгоритм: P_new = P / НОД(P, P')
+Polynomial Polynomial::NMR_P_P() const {
+    if (!NZER_P_B() || m_ == 0) {
+        return *this;
+    }
+
+    const Polynomial derivative = this->DER_P_P();
+    if (!derivative.NZER_P_B()) {
+        return *this;
+    }
+
+    Polynomial gcd = this->GCF_PP_P(derivative);
+    if (!gcd.NZER_P_B()) {
+        return *this;
+    }
+    
+    // делим исходный полином на НОД (убираем кратные корни)
+    const Polynomial result = this->DIV_PP_P(gcd);
+    
+    return result.NORM_P_P();
 }
 
 Polynomial Polynomial::NORM_P_P() const {
@@ -324,4 +391,8 @@ Polynomial Polynomial::NORM_P_P() const {
 
 std::ostream& operator << (std::ostream &os, const Polynomial& p) {
     return os << p.as_string();
+}
+
+bool operator==(const Polynomial& p1, const Polynomial& p2) {
+    return p1.EQ_PP_B(p2);
 }

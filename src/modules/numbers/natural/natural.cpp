@@ -313,6 +313,10 @@ std::ostream &operator<<(std::ostream &os, const Natural &number) {
     return os << number.as_string();
 }
 
-int operator == (const Natural &number1, const Natural &number2) {
-    return number1.COM_NN_D(number2);
+bool operator == (const Natural &number1, const Natural &number2) {
+    return number1.COM_NN_D(number2) == 0;
+}
+
+bool operator != (const Natural &number1, const Natural &number2) {
+    return !(number1 == number2);
 }
