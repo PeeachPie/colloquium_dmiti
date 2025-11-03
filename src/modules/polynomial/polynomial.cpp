@@ -61,6 +61,23 @@ bool Polynomial::NZER_P_B() const {
     return false;
 }
 
+bool Polynomial::EQ_PP_B(const Polynomial& other) const {
+    Polynomial p1 = this->NORM_P_P();
+    Polynomial p2 = other.NORM_P_P();
+    
+    if (p1.m_ != p2.m_) {
+        return false;
+    }
+    
+    for (int i = 0; i <= p1.m_; ++i) {
+        if (!p1.c_[i].EQ_QQ_B(p2.c_[i])) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 // P-1 Сложение многочленов
 Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
     Polynomial result;
@@ -374,4 +391,8 @@ Polynomial Polynomial::NORM_P_P() const {
 
 std::ostream& operator << (std::ostream &os, const Polynomial& p) {
     return os << p.as_string();
+}
+
+bool operator==(const Polynomial& p1, const Polynomial& p2) {
+    return p1.EQ_PP_B(p2);
 }

@@ -81,3 +81,5 @@ public:
 };
 
 std::ostream& operator << (std::ostream &os, const Polynomial& p);
+
+bool operator==(const Polynomial& p1, const Polynomial& p2);
