@@ -26,15 +26,34 @@ std::string Integer::as_string() const {
 
 //Z-0
 int Integer::COM_ZZ_D(const Integer& other) const {
+    Integer a = *this;
+    Integer b = other;
+    // если хотя бы одно из чисел - 0
+    if (!a.SGN_Z_D() || !b.SGN_Z_D()) {
+        if (!a.SGN_Z_D() && !b.SGN_Z_D())
+            return 0;
+        if (!a.SGN_Z_D()) {
+            if (b.s_)
+                return 1;
+            else
+                return -1;
+        } else {
+            if (a.s_)
+                return -1;
+            else
+                return 1;
+        }
+    }
+    // иначе
     // если числа одного знака
-    if (s_ == other.s_) {
+    if (a.s_ == b.s_) {
         // сравниваем модули, затем делаем поправку на знак
-        if (m_.COM_NN_D(other.m_) == 2) {
+        if (a.m_.COM_NN_D(b.m_) == 2) {
             if (s_)
                 return -1;
             else
                 return 1;
-        } else if (m_.COM_NN_D(other.m_) == 1) {
+        } else if (a.m_.COM_NN_D(b.m_) == 1) {
             if (s_)
                 return 1;
             else
@@ -43,13 +62,10 @@ int Integer::COM_ZZ_D(const Integer& other) const {
             return 0;
     // иначе больше то, которое положительно
     } else {
-        if (SGN_Z_D() && other.SGN_Z_D()) {
-            if (s_)
-                return -1;
-            else
-                return 1;
-        } else
-            return 0;
+        if (a.s_)
+            return -1;
+        else
+            return 1;
     }
 }
 
