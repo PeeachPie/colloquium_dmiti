@@ -3,7 +3,11 @@ project(Algebra)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -Wall -Wextra -g")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /Od /FS")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -Wall -Wextra -g")
+endif()
 
 set(SRC_DIR src)
 
@@ -15,6 +19,7 @@ include_directories(
     ${SRC_DIR}/modules/numbers/integer
     ${SRC_DIR}/modules/numbers/rational
     ${SRC_DIR}/modules/polynomial
+    ${SRC_DIR}/modules/calculator
     ${SRC_DIR}/user_appearance
 )
 
@@ -26,6 +31,7 @@ file(GLOB SOURCES
     "${SRC_DIR}/modules/numbers/integer/*.cpp"
     "${SRC_DIR}/modules/numbers/rational/*.cpp"
     "${SRC_DIR}/modules/polynomial/*.cpp"
+    "${SRC_DIR}/modules/calculator/*.cpp"
     "${SRC_DIR}/user_appearance/*.cpp"
 )
 
