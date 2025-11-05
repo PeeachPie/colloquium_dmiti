@@ -14,7 +14,6 @@ private:
     [[nodiscard]] Polynomial parse_expression(const std::string& str) const;
     
     [[nodiscard]] size_t find_matching_bracket(const std::string& str, size_t start_pos) const;
-    [[nodiscard]] size_t find_operator(const std::string& str, int priority) const;
     [[nodiscard]] std::string normalize_spaces(const std::string& str) const;
     [[nodiscard]] bool is_function_call(const std::string& str, size_t& func_name_end) const;
     [[nodiscard]] bool is_simple_polynomial(const std::string& str) const;

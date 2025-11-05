@@ -353,6 +353,7 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
             depth--;
         } else if (depth == 0 && (trimmed[i] == '*' || trimmed[i] == '/')) {
             PARSER_LOG("     found '" + std::string(1, trimmed[i]) + "' at pos " + std::to_string(i));
+            // Для * проверяем, что это не часть записи коэффициента (2*x или x*^2)
             if (trimmed[i] == '*' && i + 1 < trimmed.length() &&
                 (trimmed[i+1] == 'x' || trimmed[i+1] == '^')) {
                 continue;
@@ -361,22 +362,9 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
                 (trimmed[i-1] == 'x' || trimmed[i-1] == '^')) {
                 continue;
             }
-
-            if (trimmed[i] == '/' && i > 0) {
-                if (std::isdigit(trimmed[i-1])) {
-                    bool has_x_or_power_before = false;
-                    if (i >= 2) {
-                        if (trimmed[i-2] == 'x' || trimmed[i-2] == '^') {
-                            has_x_or_power_before = true;
-                        }
-                    }
-
-                    if (!has_x_or_power_before) {
-                        PARSER_LOG("     skipping: looks like fraction coefficient");
-                        continue;
-                    }
-                }
-            }
+            
+            // Если / найден на верхнем уровне - это всегда операция деления полиномов
+            // Дробные коэффициенты (2/3x) парсятся в parse_polynomial -> parse_term
             
             std::string left = trimmed.substr(0, i);
             std::string right = trimmed.substr(i + 1);
