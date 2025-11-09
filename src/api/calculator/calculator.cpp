@@ -52,7 +52,7 @@ size_t Calculator::find_matching_bracket(const std::string& str, size_t start_po
 bool Calculator::is_function_call(const std::string& str, size_t& func_name_end) const {
     func_name_end = 0;
     
-    std::vector<std::string> func_names = {"НОД", "d/dx", "Факторизация"};
+    std::vector<std::string> func_names = {"GCD", "d/dx", "FAC", "NMR"};
     
     for (const auto& func : func_names) {
         if (str.length() >= func.length() && str.substr(0, func.length()) == func) {
@@ -311,7 +311,7 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
     if (is_function_call(trimmed, func_name_end)) {
         std::string func_name = trimmed.substr(0, func_name_end);
         
-        if (func_name == "НОД") {
+        if (func_name == "GCD") {
             if (trimmed[func_name_end] != '(') {
                 throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
             }
@@ -326,7 +326,7 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
             auto [first_arg, second_arg] = parse_function_args(trimmed, args_start, args_end);
             
             if (second_arg.empty()) {
-                throw std::invalid_argument("Функция НОД требует два аргумента");
+                throw std::invalid_argument("Функция GCD требует два аргумента");
             }
             
             Polynomial first = parse_expression(first_arg);
@@ -368,7 +368,7 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
             std::string arg = trimmed.substr(args_start, args_end - args_start);
             Polynomial poly = parse_expression(arg);
             return poly.DER_P_P();
-        } else if (func_name == "Факторизация") {
+        } else if (func_name == "FAC") {
             if (trimmed[func_name_end] != '(') {
                 throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
             }
@@ -384,6 +384,21 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
             Polynomial poly = parse_expression(arg);
             auto [rational_part, polynomial_part] = poly.FAC_P_Q();
             return polynomial_part;
+        } else if (func_name == "NMR") {
+            if (trimmed[func_name_end] != '(') {
+                throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
+            }
+            
+            size_t args_start = func_name_end + 1;
+            size_t args_end = find_matching_bracket(trimmed, func_name_end);
+            
+            if (args_end == std::string::npos) {
+                throw std::invalid_argument("Не найдена закрывающая скобка");
+            }
+            
+            std::string arg = trimmed.substr(args_start, args_end - args_start);
+            Polynomial poly = parse_expression(arg);
+            return poly.NMR_P_P();
         }
     }
     
