@@ -52,7 +52,7 @@ size_t Calculator::find_matching_bracket(const std::string& str, size_t start_po
 bool Calculator::is_function_call(const std::string& str, size_t& func_name_end) const {
     func_name_end = 0;
     
-    std::vector<std::string> func_names = {"НОД", "НОК", "d/dx", "Факторизация"};
+    std::vector<std::string> func_names = {"НОД", "d/dx", "Факторизация"};
     
     for (const auto& func : func_names) {
         if (str.length() >= func.length() && str.substr(0, func.length()) == func) {
@@ -311,7 +311,7 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
     if (is_function_call(trimmed, func_name_end)) {
         std::string func_name = trimmed.substr(0, func_name_end);
         
-        if (func_name == "НОД" || func_name == "НОК") {
+        if (func_name == "НОД") {
             if (trimmed[func_name_end] != '(') {
                 throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
             }
@@ -326,54 +326,33 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
             auto [first_arg, second_arg] = parse_function_args(trimmed, args_start, args_end);
             
             if (second_arg.empty()) {
-                throw std::invalid_argument("Функция НОД/НОК требует два аргумента");
+                throw std::invalid_argument("Функция НОД требует два аргумента");
             }
             
             Polynomial first = parse_expression(first_arg);
             Polynomial second = parse_expression(second_arg);
             
-            if (func_name == "НОД") {
-                if (!second.NZER_P_B()) {
-                    return first;
-                }
-                if (!first.NZER_P_B()) {
-                    return second;
-                }
-                
-                if (first.DEG_P_N().as_string() == "0" && second.DEG_P_N().as_string() == "0") {
-                    Polynomial gcd_normalized = first.GCF_PP_P(second);
-                    
-                    auto [factor1, _] = first.FAC_P_Q();
-                    auto [factor2, __] = second.FAC_P_Q();
-                    
-                    Natural gcd_num = factor1.numerator().ABS_Z_N().GCF_NN_N(factor2.numerator().ABS_Z_N());
-                    Natural lcm_den = factor1.denominator().LCM_NN_N(factor2.denominator());
-                    Rational gcd_coeff(Integer(gcd_num.as_string()), lcm_den);
-                    
-                    return gcd_normalized.MUL_PQ_P(gcd_coeff);
-                }
-                
-                return first.GCF_PP_P(second);
-            } else {
-                if (!first.NZER_P_B() || !second.NZER_P_B()) {
-                    throw std::invalid_argument("НОК с нулевым полиномом не определен");
-                }
-                
-                if (first.DEG_P_N().as_string() == "0" && second.DEG_P_N().as_string() == "0") {
-                    auto [factor1, _] = first.FAC_P_Q();
-                    auto [factor2, __] = second.FAC_P_Q();
-                    
-                    Natural lcm_num = factor1.numerator().ABS_Z_N().LCM_NN_N(factor2.numerator().ABS_Z_N());
-                    Natural gcd_den = factor1.denominator().GCF_NN_N(factor2.denominator());
-                    Rational lcm_coeff(Integer(lcm_num.as_string()), gcd_den);
-                    
-                    return Polynomial({{0, lcm_coeff.as_string()}});
-                }
-                
-                Polynomial product = first.MUL_PP_P(second);
-                Polynomial gcd = first.GCF_PP_P(second);
-                return product.DIV_PP_P(gcd);
+            if (!second.NZER_P_B()) {
+                return first;
             }
+            if (!first.NZER_P_B()) {
+                return second;
+            }
+            
+            if (first.DEG_P_N().as_string() == "0" && second.DEG_P_N().as_string() == "0") {
+                Polynomial gcd_normalized = first.GCF_PP_P(second);
+                
+                auto [factor1, _] = first.FAC_P_Q();
+                auto [factor2, __] = second.FAC_P_Q();
+                
+                Natural gcd_num = factor1.numerator().ABS_Z_N().GCF_NN_N(factor2.numerator().ABS_Z_N());
+                Natural lcm_den = factor1.denominator().LCM_NN_N(factor2.denominator());
+                Rational gcd_coeff(Integer(gcd_num.as_string()), lcm_den);
+                
+                return gcd_normalized.MUL_PQ_P(gcd_coeff);
+            }
+            
+            return first.GCF_PP_P(second);
         } else if (func_name == "d/dx") {
             if (trimmed[func_name_end] != '(') {
                 throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
