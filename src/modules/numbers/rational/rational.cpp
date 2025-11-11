@@ -51,7 +51,7 @@ bool Rational::EQ_QQ_B(const Rational& other) const {
     return !diff.NZER_Q_B();
 }
 
-// Q-1 | Сокращение дроби
+// Q-1 | Сокращение дроби | Побегайлов Михаил 4383
 Rational &Rational::RED_Q_Q() {
     const Natural abs_numerator = p_.ABS_Z_N();
     const Natural gcd = abs_numerator.GCF_NN_N(q_);
@@ -76,17 +76,17 @@ Rational &Rational::RED_Q_Q() {
     return *this;
 }
 
-// Q-2 | Проверка сокращенного дробного на целое
+// Q-2 | Проверка сокращенного дробного на целое | Побегайлов Михаил 4383
 bool Rational::INT_Q_B() const {
     return q_.as_string() == "1";
 }
 
-// Q-3 | Преобразование целого в дробное (статический метод)
+// Q-3 | Преобразование целого в дробное (статический метод) | Побегайлов Михаил 4383
 Rational Rational::TRANS_Z_Q(const Integer &integer) {
     return Rational(integer, Natural("1"));
 }
 
-// Q-4 | Преобразование сокращенного дробного в целое (если знаменатель равен 1)
+// Q-4 | Преобразование сокращенного дробного в целое (если знаменатель равен 1) | Побегайлов Михаил 4383
 Integer Rational::TRANS_Q_Z() const {
     if (!INT_Q_B()) {
         throw std::invalid_argument("Рациональное число не является целым!");
@@ -94,7 +94,7 @@ Integer Rational::TRANS_Q_Z() const {
     return p_;
 }
 
-// Q-5 | Сложение дробей
+// Q-5 | Сложение дробей | Прокопьев Александр
 Rational Rational::ADD_QQ_Q(const Rational &other) const {
     Natural lcm_denominator = q_.LCM_NN_N(other.q_);
 
@@ -116,13 +116,13 @@ Rational Rational::ADD_QQ_Q(const Rational &other) const {
     return result;
 }
 
-// Q-6 | Вычитание дробей
+// Q-6 | Вычитание дробей | Прокопьев Александр
 Rational Rational::SUB_QQ_Q(const Rational &other) const {
     const Rational negated_other(other.p_.MUL_ZM_Z(), other.q_);
     return ADD_QQ_Q(negated_other);
 }
 
-// Q-7 | Умножение дробей
+// Q-7 | Умножение дробей | Прокопьев Александр
 // Алгоритм с предварительным сокращением:
 // (a/b) * (c/d) = (a/gcd(a,d)) * (c/gcd(c,b)) / ((b/gcd(c,b)) * (d/gcd(a,d)))
 Rational Rational::MUL_QQ_Q(const Rational &other) const {
@@ -159,7 +159,7 @@ Rational Rational::MUL_QQ_Q(const Rational &other) const {
     return result;
 }
 
-// Q-8 | Деление дробей
+// Q-8 | Деление дробей | Прокопьев Александр
 Rational Rational::DIV_QQ_Q(const Rational &other) const {
     if (other.p_.SGN_Z_D() == 0) {
         throw std::invalid_argument("Деление на ноль!");

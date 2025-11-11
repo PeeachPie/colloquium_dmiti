@@ -24,7 +24,7 @@ std::string Integer::as_string() const {
     return str;
 }
 
-//Z-0
+//Z-0 | Кисс Илья 4383
 int Integer::COM_ZZ_D(const Integer& other) const {
     Integer a = *this;
     Integer b = other;
@@ -70,12 +70,12 @@ int Integer::COM_ZZ_D(const Integer& other) const {
 }
 
 
-//Z-1
+//Z-1 | Беспалов Глеб 4383
 Natural Integer::ABS_Z_N() const {
     return m_; // возвращаем содержимое поля Natural m_
 }
 
-//Z-2
+//Z-2 | Беспалов Глеб 4383
 int Integer::SGN_Z_D() const{
     // если число равно 0
     if(!m_.NZER_N_B()) return 0;
@@ -85,7 +85,7 @@ int Integer::SGN_Z_D() const{
     return 1;
 }
 
-//Z-3
+//Z-3 | Беспалов Глеб 4383
 Integer Integer::MUL_ZM_Z() const{
     // если 0, то ничего не делаем
     if (!m_.NZER_N_B())
@@ -96,12 +96,12 @@ Integer Integer::MUL_ZM_Z() const{
     return result;
 }
 
-//Z-4
+//Z-4 | Жданова Кира 4383
 Integer Integer::TRANS_N_Z(const Natural& natural){ 
     return Integer(natural.as_string()); // создаем целое число из заданного натурального
 }
 
-//Z-5
+//Z-5 | Жданова Кира 4383 
 Natural Integer::TRANS_Z_N() const{
     // если число отрицательно и не 0, то выбрасывается исключение
     if (s_ && m_.NZER_N_B())
@@ -110,7 +110,7 @@ Natural Integer::TRANS_Z_N() const{
     return m_; // возвращаем содержимое поля Natural m_
 }
 
-//Z-6
+//Z-6 | Беспалов Глеб 4383
 Integer Integer::ADD_ZZ_Z(const Integer& other) const{
     Integer result;
 
@@ -135,7 +135,7 @@ Integer Integer::ADD_ZZ_Z(const Integer& other) const{
     return result;
 }
 
-//Z-7
+//Z-7 | Беспалов Глеб 4383
 Integer Integer::SUB_ZZ_Z(const Integer& other) const{
     Integer result;
 
@@ -160,7 +160,7 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const{
     return result;
 }
 
-//Z-8
+//Z-8 | Жданова Кира 4383
 Integer Integer::MUL_ZZ_Z(const Integer& other) const{
     // если хотя бы один из множителей нулевой,
     // то возвращаем 0
@@ -176,7 +176,7 @@ Integer Integer::MUL_ZZ_Z(const Integer& other) const{
     return result;
 }
 
-//Z-9
+//Z-9 | Жданова Кира 4383
 Integer Integer::DIV_ZZ_Z(const Integer& other) const {
     // если делитель равен 0
     if (!other.m_.NZER_N_B())
@@ -201,7 +201,7 @@ Integer Integer::DIV_ZZ_Z(const Integer& other) const {
     return div;
 }
 
-//Z-10
+//Z-10 | Жданова Кира 4383
 Integer Integer::MOD_ZZ_Z(const Integer& other) const {
     // если делитель равен 0
     if (!other.m_.NZER_N_B())
