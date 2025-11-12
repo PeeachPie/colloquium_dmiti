@@ -22,8 +22,9 @@ QString CalculatorBackend::formatResult(const QString& apiResult) {
     // Заменяем "x*^" на "x^" (убираем лишний знак умножения перед степенью)
     result.replace("x*^", "x^");
     
-    // Заменяем "x^1" на "x" (степень 1 не отображаем)
-    result.replace("x^1", "x");
+    // Заменяем "x^1" на "x"
+    QRegularExpression xPowerOne("x\\^1(?!\\d)");
+    result.replace(xPowerOne, "x");
     
     // Убираем единичный коэффициент "1x" -> "x" (в начале или после операторов)
     result.replace(QRegularExpression("(^|[+\\-])1x"), "\\1x");
@@ -56,6 +57,9 @@ QString CalculatorBackend::convertFromQmlFormat(const QString& qmlExpression) {
     for (auto it = superscriptMap.constBegin(); it != superscriptMap.constEnd(); ++it) {
         result.replace(it.key(), it.value());
     }
+    
+    QRegularExpression numberBeforeBracket("(\\d)\\(");
+    result.replace(numberBeforeBracket, "\\1*(");
     
     // проверяем, нет ли x в степени (x^x, x^2x и т.д.)
     QRegularExpression xInExponent("\\^[^0-9+\\-*/%()\\s]*x");
