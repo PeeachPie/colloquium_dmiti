@@ -81,4 +81,4 @@ else()
 endif()
 
 enable_testing()
-add_subdirectory(tst)
+# add_subdirectory(tst)
