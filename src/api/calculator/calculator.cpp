@@ -70,6 +70,7 @@ std::pair<std::string, std::string> Calculator::parse_function_args(const std::s
     // Ищем запятую на верхнем уровне вложенности
     int depth = 0;
     size_t comma_pos = std::string::npos;
+    int comma_count = 0;
     
     for (size_t i = 0; i < args_str.length(); ++i) {
         if (args_str[i] == '(') {
@@ -77,8 +78,11 @@ std::pair<std::string, std::string> Calculator::parse_function_args(const std::s
         } else if (args_str[i] == ')') {
             depth--;
         } else if (args_str[i] == ',' && depth == 0) {
+            comma_count++;
+            if (comma_count > 1) {
+                throw std::invalid_argument("Функция GCD принимает не более двух параметров");
+            }
             comma_pos = i;
-            break;
         }
     }
     
@@ -305,6 +309,37 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
     
     if (trimmed.empty()) {
         return Polynomial();
+    }
+    
+    size_t func_name_end_check = 0;
+    bool is_gcd_function = false;
+    if (is_function_call(trimmed, func_name_end_check)) {
+        std::string func_name = trimmed.substr(0, func_name_end_check);
+        if (func_name == "GCD") {
+            is_gcd_function = true;
+        }
+    }
+    
+    if (!is_gcd_function) {
+        int depth = 0;
+        bool inside_function = false;
+        
+        for (size_t i = 0; i < trimmed.length(); ++i) {
+            if (i + 3 <= trimmed.length() && trimmed.substr(i, 3) == "GCD") {
+                inside_function = true;
+            }
+            
+            if (trimmed[i] == '(') {
+                depth++;
+            } else if (trimmed[i] == ')') {
+                depth--;
+                if (depth == 0) {
+                    inside_function = false;
+                }
+            } else if (trimmed[i] == ',' && !inside_function) {
+                throw std::invalid_argument("Запятая разрешена только внутри функции GCD");
+            }
+        }
     }
     
     size_t func_name_end = 0;
