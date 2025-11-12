@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>components/CalculatorButton.qml</file>
+        <file>components/Display.qml</file>
+        <file>components/MathDisplay.qml</file>
+        <file>components/Theme.qml</file>
+        <file>qmldir</file>
+    </qresource>
+</RCC>
+
