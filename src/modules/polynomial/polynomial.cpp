@@ -63,7 +63,7 @@ bool Polynomial::EQ_PP_B(const Polynomial& other) const {
     return true;
 }
 
-// P-1 Сложение многочленов
+// P-1 Сложение многочленов | Харитонов Вадим 4383
 Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
     Polynomial result = *this;
 
@@ -80,7 +80,7 @@ Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
     return result;
 }
 
-// P-2 Вычитание многочленов
+// P-2 Вычитание многочленов | Харитонов Вадим 4383
 Polynomial Polynomial::SUB_PP_P(const Polynomial& other) const {
     Polynomial result = *this;
 
@@ -97,7 +97,7 @@ Polynomial Polynomial::SUB_PP_P(const Polynomial& other) const {
     return result;
 }
 
-// P-3
+// P-3 | Кисс Илья 4383
 Polynomial Polynomial::MUL_PQ_P(const Rational& rational) const {
     // если домножаем на ноль - возвращаем сразу нулевой полином
     if (!rational.NZER_Q_B()) {
@@ -116,7 +116,7 @@ Polynomial Polynomial::MUL_PQ_P(const Rational& rational) const {
     return result;
 }
 
-// P-4
+// P-4 | Кисс Илья 4383
 Polynomial Polynomial::MUL_Pxk_P(int k) const {
     // если k меньше 0, то ошибка
     if (k < 0)
@@ -134,7 +134,7 @@ Polynomial Polynomial::MUL_Pxk_P(int k) const {
     return result;
 }
 
-// P-5 Старший коэффициент многочлена
+// P-5 Старший коэффициент многочлена | Харитонов Вадим 4383
 Rational Polynomial::LED_P_Q() const {
     // нормируем полином
     Polynomial clean = this->NORM_P_P();
@@ -142,14 +142,14 @@ Rational Polynomial::LED_P_Q() const {
     return clean.c_[clean.m_];
 }
 
-// P-6 Степень многочлена
+// P-6 Степень многочлена | Харитонов Вадим 4383
 Natural Polynomial::DEG_P_N() const {
     Polynomial clean = this->NORM_P_P();
 
     return Natural(std::to_string(clean.m_));
 }
 
-// P-7
+// P-7 | Кисс Илья 4383
 std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
     Polynomial clean = this->NORM_P_P();
     // если полином нулевой, то ошибка
@@ -180,7 +180,7 @@ std::pair<Rational, Polynomial> Polynomial::FAC_P_Q() const {
     return std::make_pair(GL, clean);
 }
 
-// P-8 | Умножение двух многочленов
+// P-8 | Умножение двух многочленов | Побегайлов Михаил 4383
 Polynomial Polynomial::MUL_PP_P(const Polynomial& other) const {
     Polynomial a = this->NORM_P_P();
     Polynomial b = other.NORM_P_P();
@@ -203,7 +203,7 @@ Polynomial Polynomial::MUL_PP_P(const Polynomial& other) const {
     return result;
 }
 
-// P-9 | Частное от деления многочлена на многочлен (с остатком)
+// P-9 | Частное от деления многочлена на многочлен (с остатком) | Побегайлов Михаил 4383
 Polynomial Polynomial::DIV_PP_P(const Polynomial& other) const {
     if (!other.NZER_P_B())
         throw std::invalid_argument("Деление на нулевой многочлен недопустимо!");
@@ -229,7 +229,7 @@ Polynomial Polynomial::DIV_PP_P(const Polynomial& other) const {
     return quotient.NORM_P_P();
 }
 
-// P-10 | Остаток от деления многочлена на многочлен
+// P-10 | Остаток от деления многочлена на многочлен | Побегайлов Михаил 4383
 Polynomial Polynomial::MOD_PP_P(const Polynomial& other) const {
     if (!other.NZER_P_B())
         throw std::invalid_argument("Деление на нулевой многочлен недопустимо!");
@@ -241,7 +241,7 @@ Polynomial Polynomial::MOD_PP_P(const Polynomial& other) const {
     return remainder.NORM_P_P();
 }
 
-// P-11 | НОД многочленов (алгоритм Евклида)
+// P-11 | НОД многочленов (алгоритм Евклида) | Прокопьев Александр 4383
 Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
     Polynomial a = this->NORM_P_P();
     Polynomial b = other.NORM_P_P();
@@ -260,7 +260,7 @@ Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
     return a.FAC_P_Q().second.MUL_PQ_P(sgn);
 }
 
-// P-12
+// P-12 | Кисс Илья 4383
 Polynomial Polynomial::DER_P_P() const {
     Polynomial clean = this->NORM_P_P();
 
@@ -280,7 +280,7 @@ Polynomial Polynomial::DER_P_P() const {
     return result;
 }
 
-// P-13 | Преобразование многочлена — кратные корни в простые
+// P-13 | Преобразование многочлена — кратные корни в простые | Прокопьев Александр 4383
 // Алгоритм: P_new = P / НОД(P, P')
 Polynomial Polynomial::NMR_P_P() const {
     if (!NZER_P_B() || m_ == 0) {

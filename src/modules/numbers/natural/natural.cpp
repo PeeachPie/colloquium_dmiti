@@ -36,7 +36,7 @@ std::string Natural::as_string() const {
 }
 
 
-//N-1
+//N-1 | Жданова Кира 4383
 int Natural::COM_NN_D(const Natural& other) const {
     if (n_ > other.n_) {
         return 2; 
@@ -56,17 +56,17 @@ int Natural::COM_NN_D(const Natural& other) const {
     return 0;
 }
 
-// N-2
+// N-2 | Кисс Илья 4383
 bool Natural::NZER_N_B() const {
     return !(n_ == 0 && a_[0] == '0');
 }
 
-// N-3
+// N-3 | Жданова Кира 4383
 Natural Natural::ADD_1N_N() {
     return ADD_NN_N(Natural("1"));
 }
 
-// N-4
+// N-4 | Жданова Кира 4383
 Natural Natural::ADD_NN_N(const Natural &other) const {
     Natural smaller = *this;
     Natural larger = other;
@@ -95,7 +95,7 @@ Natural Natural::ADD_NN_N(const Natural &other) const {
     return Natural(result);
 }
 
-// N-5
+// N-5 | Жданова Кира 4383
 Natural Natural::SUB_NN_N(const Natural &other) const
 {
     if (COM_NN_D(other) == 1) {
@@ -131,7 +131,7 @@ Natural Natural::SUB_NN_N(const Natural &other) const
     return Natural(result);
 }
 
-// N-6
+// N-6 | Жданова Кира 4383
 Natural Natural::MUL_ND_N(int digit) const
 {
     if (digit > 10 || digit < 0) {
@@ -164,7 +164,7 @@ Natural Natural::MUL_ND_N(int digit) const
     return Natural(result);
 }
 
-// N-7
+// N-7 | Жданова Кира 4383
 Natural Natural::MUL_Nk_N(int k) const {
     if (n_ == 0 && a_[0] == '0')
         return Natural();
@@ -178,7 +178,7 @@ Natural Natural::MUL_Nk_N(int k) const {
     return Natural(result);
 }
 
-// N-8
+// N-8 | Кисс Илья 4383
 Natural Natural::MUL_NN_N(const Natural &other) const {
     Natural result;
 
@@ -197,7 +197,7 @@ Natural Natural::MUL_NN_N(const Natural &other) const {
     return result;
 }
 
-// N-9
+// N-9 | Жданова Кира 4383
 Natural Natural::SUB_NDN_N(const Natural &other, int digit) const {
     Natural subtrahend = other.MUL_ND_N(digit);
     Natural result = SUB_NN_N(subtrahend);
@@ -205,7 +205,7 @@ Natural Natural::SUB_NDN_N(const Natural &other, int digit) const {
     return result;
 }
 
-// N-10
+// N-10 | Жданова Кира 4383
 std::pair<int, int> Natural::DIV_NN_Dk(const Natural &other) const {
     // если делитель не равен 0
     if (!other.NZER_N_B())
@@ -231,7 +231,7 @@ std::pair<int, int> Natural::DIV_NN_Dk(const Natural &other) const {
     return std::make_pair(dig, k);
 }
 
-// N-11
+// N-11 | Кисс Илья 4383
 Natural Natural::DIV_NN_N(const Natural &other) const {
     // для сохранения результата
     Natural result;
@@ -258,7 +258,7 @@ Natural Natural::DIV_NN_N(const Natural &other) const {
     return result;
 }
 
-// N-12
+// N-12 | Кисс Илья 4383
 Natural Natural::MOD_NN_N(const Natural &other) const {
     // если делитель не равен 0
     if (!other.NZER_N_B())
@@ -273,7 +273,7 @@ Natural Natural::MOD_NN_N(const Natural &other) const {
     return result;
 }
 
-// N-13
+// N-13 | Кисс Илья 4383
 Natural Natural::GCF_NN_N(const Natural &other) const {
     // Алгоритм Евклида для нахождения НОД
 
@@ -300,7 +300,7 @@ Natural Natural::GCF_NN_N(const Natural &other) const {
     return max;
 }
 
-// N-14
+// N-14 | Кисс Илья 4383
 Natural Natural::LCM_NN_N(const Natural &other) const {
     // связь НОД и НОК: (a * b) / GCD(a, b)
     Natural numerator = this->MUL_NN_N(other);   // числитель дроби
