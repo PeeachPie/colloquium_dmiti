@@ -439,14 +439,14 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
         }
     }
     
-    PARSER_LOG("  -> searching for high-priority operators (*, /)");
+    PARSER_LOG("  -> searching for high-priority operators (*, /, %)");
     depth = 0;
     for (int i = static_cast<int>(trimmed.length()) - 1; i >= 0; --i) {
         if (trimmed[i] == ')') {
             depth++;
         } else if (trimmed[i] == '(') {
             depth--;
-        } else if (depth == 0 && (trimmed[i] == '*' || trimmed[i] == '/')) {
+        } else if (depth == 0 && (trimmed[i] == '*' || trimmed[i] == '/' || trimmed[i] == '%')) {
             PARSER_LOG("     found '" + std::string(1, trimmed[i]) + "' at pos " + std::to_string(i));
             // Для * проверяем, что это не часть записи коэффициента (2*x или x*^2)
             if (trimmed[i] == '*' && i + 1 < trimmed.length() &&
@@ -470,8 +470,10 @@ Polynomial Calculator::parse_expression(const std::string& str) const {
             PARSER_LOG("  -> found high-priority operator '" + std::string(1, trimmed[i]) + "' at pos " + std::to_string(i));
             if (trimmed[i] == '*') {
                 return left_poly.MUL_PP_P(right_poly);
-            } else {
+            } else if (trimmed[i] == '/') {
                 return left_poly.DIV_PP_P(right_poly);
+            } else { // trimmed[i] == '%'
+                return left_poly.MOD_PP_P(right_poly);
             }
         }
     }
