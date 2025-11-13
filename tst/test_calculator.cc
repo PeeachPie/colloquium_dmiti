@@ -355,3 +355,89 @@ TEST(CalculatorTest, Error_InvalidToken) {
     std::string result = calc.simplify_expression("x + y");
     EXPECT_TRUE(result.find("Error") != std::string::npos);
 }
+
+// ==================== ТЕСТЫ РЕКУРСИВНЫХ ВЫРАЖЕНИЙ С ОТРИЦАТЕЛЬНЫМИ ЧИСЛАМИ ====================
+
+TEST(CalculatorTest, Recursive_ComplexExpression_Negative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("((x - 2) * (x + 3))(x^2 - 1)");
+    EXPECT_EQ(result, "1 * x ^ 4 + 1 * x ^ 3 -7 * x ^ 2 -1 * x ^ 1 + 6");
+}
+
+TEST(CalculatorTest, Recursive_NestedFunctions_Negative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("DER(GCD(x^2 - 4, x^2 + 2x - 8))");
+    EXPECT_EQ(result, "1");
+}
+
+TEST(CalculatorTest, Recursive_MultipleOperations_Negative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("((x^2 - 2x) + (x - 3)) * (x + 2)");
+    EXPECT_EQ(result, "1 * x ^ 3 + 1 * x ^ 2 -5 * x ^ 1 -6");
+}
+
+TEST(CalculatorTest, Recursive_NegativeCoefficients) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("(-2x^2 + 3x - 1)(x - 2)");
+    EXPECT_EQ(result, "-2 * x ^ 3 + 7 * x ^ 2 -7 * x ^ 1 + 2");
+}
+
+// ==================== ТЕСТЫ КОМПЛЕКСНЫХ СЦЕНАРИЕВ С ОТРИЦАТЕЛЬНЫМИ ЧИСЛАМИ ====================
+
+TEST(CalculatorTest, Complex_MixedOperations_Negative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("GCD((x^2 - 4x + 4), (x^2 - 4)) * (x - 2)");
+    EXPECT_EQ(result, "1 * x ^ 2 -4 * x ^ 1 + 4");
+}
+
+TEST(CalculatorTest, Complex_ChainOperations_Negative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("DER((x^2 - 3x + 2) * (x + 1))");
+    EXPECT_EQ(result, "3 * x ^ 2 -4 * x ^ 1 -1");
+}
+
+TEST(CalculatorTest, Complex_AllOperations_Negative) {
+    Calculator calc;
+    std::string result1 = calc.simplify_expression("(x^2 - 2x) + (x^2 + 3x - 1)");
+    std::string result2 = calc.simplify_expression("GCD(x^2 - 1, x^2 + 2x - 3)");
+    EXPECT_EQ(result1, "2 * x ^ 2 + 1 * x ^ 1 -1");
+    EXPECT_EQ(result2, "1 * x ^ 1 -1");
+}
+
+TEST(CalculatorTest, Complex_NegativePolynomials) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("(-x^3 + 2x^2 - x + 5) + (3x^3 - x^2 + 2x - 1)");
+    EXPECT_EQ(result, "2 * x ^ 3 + 1 * x ^ 2 + 1 * x ^ 1 + 4");
+}
+
+TEST(CalculatorTest, Complex_DER_WithNegative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("DER(-2x^3 + 3x^2 - 4x + 1)");
+    EXPECT_EQ(result, "-6 * x ^ 2 + 6 * x ^ 1 -4");
+}
+
+TEST(CalculatorTest, Complex_GCD_WithNegative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("GCD(2x^2 - 3x - 2, x^2 - 4)");
+    EXPECT_EQ(result, "1 * x ^ 1 -2");
+}
+
+TEST(CalculatorTest, Complex_NestedNegative) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("DER(GCD(-x^2 + 4, x^2 - 2x))");
+    EXPECT_EQ(result, "1");
+}
+
+TEST(CalculatorTest, Complex_MultipleNegativeTerms) {
+    Calculator calc;
+    std::string result = calc.simplify_expression("(-x + 2)(-x - 3)(x - 1)");
+    EXPECT_EQ(result, "1 * x ^ 3 -7 * x ^ 1 + 6");
+}
+
+TEST(CalculatorTest, Complex_MixedPositiveNegative) {
+    Calculator calc;
+    std::string result1 = calc.simplify_expression("GCD(x^2 - 5x + 6, x^2 - 9)");
+    std::string result2 = calc.simplify_expression("DER(x^3 - 3x^2 + 2x - 1)");
+    EXPECT_EQ(result1, "1 * x ^ 1 -3");
+    EXPECT_EQ(result2, "3 * x ^ 2 -6 * x ^ 1 + 2");
+}
