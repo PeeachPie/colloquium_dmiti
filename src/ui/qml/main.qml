@@ -27,7 +27,7 @@ ApplicationWindow {
     property bool newInput: true
     
     // токены для группового удаления
-    property var groupTokens: ["GCD(", "DER(", "FAC(", "NMR(", "^2", "^3", "^4", "^5", "^6", "^7", "^8", "^9", ","]
+    property var groupTokens: ["GCD(", "DER(", "FAC(", "NMR(", "^2", "^3", "^4", "^5", "^6", "^7", "^8", "^9", ",", "Ошибка"]
     
     color: backgroundColor
     
@@ -240,29 +240,24 @@ ApplicationWindow {
                 onClicked: handleOperation("+")
             }
             
-            // Ряд 5: запятая, 0, ., =
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: ","
-                fontSize: 26
-                onClicked: handleInput(",")
-            }
+            // Ряд 5: 0, запятая, =
             
             CalculatorButton {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.columnSpan: 2
                 buttonText: "0"
                 fontSize: 26
                 onClicked: handleInput("0")
             }
-            
+
             CalculatorButton {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                buttonText: "."
-                fontSize: 28
-                onClicked: handleInput(".")
+                buttonText: ","
+                fontSize: 24
+                textVerticalOffset: -8
+                onClicked: handleInput(",")
             }
             
             CalculatorButton {
@@ -359,7 +354,7 @@ ApplicationWindow {
             currentInput = input
             newInput = false
         } else {
-            if (currentInput === "0" && input !== "." && input !== ",") {
+            if (currentInput === "0" && input !== ",") {
                 currentInput = input
             } else {
                 currentInput += input
@@ -501,10 +496,6 @@ ApplicationWindow {
             }
             else if (key === '%') {
                 handleOperation("%")
-                event.accepted = true
-            }
-            else if (key === '.') {
-                handleInput(".")
                 event.accepted = true
             }
             else if (key === '/') {
