@@ -305,7 +305,7 @@ ApplicationWindow {
                         Layout.fillHeight: true
                         buttonText: "DER"
                         buttonType: "function"
-                        fontSize: 14
+                        fontSize: 16
                         onClicked: handleFunction("derivative")
                     }
                 }
