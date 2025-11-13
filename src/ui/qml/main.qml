@@ -126,7 +126,7 @@ ApplicationWindow {
                 buttonText: "÷"
                 buttonType: "operator"
                 fontSize: 28
-                onClicked: handleInput("/")
+                onClicked: handleOperation("/")
             }
             
             CalculatorButton {
@@ -365,7 +365,11 @@ ApplicationWindow {
     
     function handleOperation(operation) {
         currentOperation = operation
-        currentInput += " " + operation + " "
+        if (operation === "/") {
+            currentInput += operation
+        } else {
+            currentInput += " " + operation + " "
+        }
         display.mainText = currentInput
         newInput = false
     }
@@ -499,7 +503,7 @@ ApplicationWindow {
                 event.accepted = true
             }
             else if (key === '/') {
-                handleInput("/")
+                handleOperation("/")
                 event.accepted = true
             }
             else if (key === 'x' || key === 'X') {
