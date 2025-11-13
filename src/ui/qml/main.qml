@@ -45,52 +45,45 @@ ApplicationWindow {
             historyText: "Добро пожаловать в калькулятор!\nВведите полиномиальное выражение"
         }
         
-        Rectangle {
+        RowLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 60
-            color: surfaceColor
-            radius: 12
+            spacing: 12
             
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 8
-                
-                CalculatorButton {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    buttonText: "x"
-                    buttonType: "function"
-                    fontSize: 24
-                    onClicked: handleInput("x")
-                }
-                
-                CalculatorButton {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    buttonText: "xⁿ"
-                    buttonType: "function"
-                    fontSize: 20
-                    onClicked: handleInput("x^")
-                }
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: "x"
+                buttonType: "function"
+                fontSize: 24
+                onClicked: handleInput("x")
+            }
+            
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: "xⁿ"
+                buttonType: "function"
+                fontSize: 20
+                onClicked: handleInput("x^")
+            }
 
-                CalculatorButton {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    buttonText: "("
-                    buttonType: "function"
-                    fontSize: 22
-                    onClicked: handleInput("(")
-                }
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: "("
+                buttonType: "function"
+                fontSize: 22
+                onClicked: handleInput("(")
+            }
 
-                CalculatorButton {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    buttonText: ")"
-                    buttonType: "function"
-                    fontSize: 22
-                    onClicked: handleInput(")")
-                }
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: ")"
+                buttonType: "function"
+                fontSize: 22
+                onClicked: handleInput(")")
             }
         }
         
@@ -270,64 +263,45 @@ ApplicationWindow {
             }
         }
         
-        Rectangle {
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 100
-            color: surfaceColor
-            radius: 12
+            Layout.preferredHeight: 60
+            spacing: 12
             
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 6
-                spacing: 6
-                
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: 6
-                    
-                    CalculatorButton {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        buttonText: "GCD"
-                        buttonType: "function"
-                        fontSize: 16
-                        onClicked: handleFunction("gcd")
-                    }
-                    
-                    CalculatorButton {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        buttonText: "DER"
-                        buttonType: "function"
-                        fontSize: 16
-                        onClicked: handleFunction("derivative")
-                    }
-                }
-                
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: 6
-                    
-                    CalculatorButton {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        buttonText: "FAC"
-                        buttonType: "function"
-                        fontSize: 16
-                        onClicked: handleFunction("factorize")
-                    }
-                    
-                    CalculatorButton {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        buttonText: "NMR"
-                        buttonType: "function"
-                        fontSize: 16
-                        onClicked: handleFunction("nmr")
-                    }
-                }
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: "GCD"
+                buttonType: "function"
+                fontSize: 18
+                onClicked: handleFunction("gcd")
+            }
+            
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: "DER"
+                buttonType: "function"
+                fontSize: 18
+                onClicked: handleFunction("derivative")
+            }
+            
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: "FAC"
+                buttonType: "function"
+                fontSize: 18
+                onClicked: handleFunction("factorize")
+            }
+            
+            CalculatorButton {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                buttonText: "NMR"
+                buttonType: "function"
+                fontSize: 18
+                onClicked: handleFunction("nmr")
             }
         }
         
@@ -340,7 +314,7 @@ ApplicationWindow {
             Text {
                 id: statusText
                 anchors.centerIn: parent
-                text: "Работает с рациональными полиномами"
+                text: "Работаем с рациональными полиномами"
                 font.pixelSize: 12
                 font.family: "SF Pro Display"
                 color: "#8E8E93"
