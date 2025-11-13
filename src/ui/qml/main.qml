@@ -340,7 +340,7 @@ ApplicationWindow {
             Text {
                 id: statusText
                 anchors.centerIn: parent
-                text: "Работаем с рациональными полиномами"
+                text: "Работает с рациональными полиномами"
                 font.pixelSize: 12
                 font.family: "SF Pro Display"
                 color: "#8E8E93"
