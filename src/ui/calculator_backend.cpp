@@ -42,6 +42,9 @@ QString CalculatorBackend::formatResult(const QString& apiResult) {
 QString CalculatorBackend::convertFromQmlFormat(const QString& qmlExpression) {
     QString result = qmlExpression;
     
+    result = result.simplified();
+    result.replace(" ", "");
+    
     static const QMap<QChar, QString> superscriptMap = {
         {QChar(0x2070), "^0"}, // ⁰
         {QChar(0x00B9), "^1"}, // ¹
@@ -133,6 +136,11 @@ QString CalculatorBackend::evaluate(const QString& expression) {
         std::string result = calculator_.simplify_expression(stdExpression);
         
         qDebug() << "[Backend] Raw result:" << QString::fromUtf8(result.c_str());
+        
+        if (result.find("Error:") == 0) {
+            return QString("Ошибка");
+        }
+        
         QString formattedResult = formatResult(QString::fromUtf8(result.c_str()));
 
         return formattedResult;
@@ -140,10 +148,10 @@ QString CalculatorBackend::evaluate(const QString& expression) {
     } catch (const std::exception& e) {
         QString errorMsg = QString::fromLocal8Bit(e.what());
         qDebug() << "[Backend] Error:" << errorMsg;
-        return QString("Ошибка: %1").arg(errorMsg);
+        return QString("Ошибка");
     } catch (...) {
         qDebug() << "[Backend] Unknown error";
-        return QString("Ошибка: Неизвестная ошибка");
+        return QString("Ошибка");
     }
 }
 
