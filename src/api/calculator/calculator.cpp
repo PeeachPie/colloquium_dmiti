@@ -176,6 +176,9 @@ Polynomial Calculator::parse_polynomial(const std::string& token) const {
 
     // Определяем степень
     int deg = pow_str.empty() ? 1 : stoi(pow_str);
+    if (deg < 0) {
+        throw std::runtime_error("Negative exponents are not allowed");
+    }
 
     return Polynomial({{deg, coef_str}});
 }
@@ -223,12 +226,59 @@ Polynomial Calculator::evaluate_postfix(const std::vector<std::string>& tokens) 
 std::string Calculator::simplify_expression(const std::string& expression) const {
     try {
         std::string processed = expression;
+        
+        std::erase_if(processed, ::isspace);
+        
+        // Обрабатываем выражения в степени x^(...)
+        std::regex exponent_expr(R"(x\^(\([^()]+\)))");
+        std::smatch match;
+        std::string temp = processed;
+        
+        while (std::regex_search(temp, match, exponent_expr)) {
+            std::string expr_in_parens = match[1].str();
+            std::string inner_expr = expr_in_parens.substr(1, expr_in_parens.length() - 2);
+            
+            std::string exponent_result = simplify_expression(inner_expr);
+            
+            if (exponent_result.find("Error:") == 0) {
+                throw std::runtime_error("Invalid exponent expression");
+            }
+            
+            if (exponent_result.find('x') != std::string::npos || exponent_result.find('X') != std::string::npos) {
+                throw std::runtime_error("Exponent must be a constant (cannot contain variable x)");
+            }
+            
+            std::regex number_regex("^-?[0-9]+$");
+            if (!std::regex_match(exponent_result, number_regex)) {
+                throw std::runtime_error("Exponent must be a non-negative integer");
+            }
+            
+            int exponent_value = std::stoi(exponent_result);
+            if (exponent_value < 0) {
+                throw std::runtime_error("Negative exponents are not allowed");
+            }
+            
+            std::string replacement = "x^" + exponent_result;
+            size_t pos = temp.find(match[0].str());
+            temp.replace(pos, match[0].length(), replacement);
+        }
+        
+        processed = temp;
+        
+        if (std::regex_search(processed, std::regex("\\^-"))) {
+            throw std::runtime_error("Negative exponents are not allowed");
+        }
+        
         // Добавляем 0 перед унарным минусом в начале выражения
         if (!processed.empty() && processed[0] == '-') {
             processed = "0" + processed;
         }
         // Также обрабатываем унарные минусы после скобок
         processed = std::regex_replace(processed, std::regex("\\(-"), "(0-");
+        
+        processed = std::regex_replace(processed, std::regex("([+\\-*/%])-(\\d+(?:/\\d+)?(?:x(?:\\^\\d+)?)?)"), "$1(0-$2)");
+        
+        processed = std::regex_replace(processed, std::regex(",-"), ",0-");
         
         auto postfix = infix_to_postfix(processed);
         Polynomial result = evaluate_postfix(postfix);
