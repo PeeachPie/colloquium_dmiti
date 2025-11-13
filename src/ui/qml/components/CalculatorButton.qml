@@ -13,6 +13,7 @@ Item {
     property color textColor: getTextColor()
     property real fontSize: 20
     property bool enableHoverEffect: true
+    property real textVerticalOffset: 0
     
     property bool pressed: false
     property bool hovered: false
@@ -76,6 +77,7 @@ Item {
     
     Text {
         anchors.centerIn: parent
+        anchors.verticalCenterOffset: textVerticalOffset
         text: buttonText
         font.pixelSize: fontSize
         font.family: "SF Pro Display"
