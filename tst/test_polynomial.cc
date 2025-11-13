@@ -10,6 +10,12 @@ TEST(PolynomialTest, DEG_P_N) {
     EXPECT_EQ(zero.DEG_P_N().as_string(), "0");
 }
 
+TEST(PolynomialTest, DER_P_P) {
+    std::vector<std::pair<int, std::string>> terms = {{0, "5"}};
+    Polynomial p(terms);
+    EXPECT_EQ(p.DER_P_P().as_string(), "0");
+}
+
 TEST(PolynomialTest, MUL_PP_P) {
     std::vector<std::pair<int, std::string>> terms1 = {{1, "2"}, {0, "1"}};
     std::vector<std::pair<int, std::string>> terms2 = {{1, "3"}, {0, "2"}};

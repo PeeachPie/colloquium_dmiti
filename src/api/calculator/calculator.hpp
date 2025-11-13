@@ -1,25 +1,58 @@
 #pragma once
 
 #include "polynomial.hpp"
-
 #include <string>
+#include <stack>
+#include <map>
+#include <set>
+#include <functional>
 
+/*
+ *  Класс Calculator — парсер и вычислитель выражений над полиномами от одной переменной x
+ */
 class Calculator {
 public:
-    [[nodiscard]] Polynomial simplify_expression(const std::string& expression) const;
+    Calculator() = default;
+
+    /*
+     * Упрощает строковое выражение, возвращая результат в виде строки
+     * Например:
+     *   "x^2 + 2x + 1"
+     *   "DER(x^3 + x^2)"
+     *   "GCD(x^2 - 1, x - 1)"
+     */
+    [[nodiscard]] std::string simplify_expression(const std::string& expression) const;
 
 private:
-    [[nodiscard]] Polynomial parse_polynomial(const std::string& str) const;
-    
-    [[nodiscard]] Polynomial parse_expression(const std::string& str) const;
-    
-    [[nodiscard]] size_t find_matching_bracket(const std::string& str, size_t start_pos) const;
-    [[nodiscard]] std::string normalize_spaces(const std::string& str) const;
-    [[nodiscard]] bool is_function_call(const std::string& str, size_t& func_name_end) const;
-    [[nodiscard]] bool is_simple_polynomial(const std::string& str) const;
-    
-    [[nodiscard]] std::pair<std::string, std::string> parse_function_args(const std::string& str, size_t start_pos, size_t end_pos) const;
-    
-    [[nodiscard]] std::pair<int, std::string> parse_term(const std::string& term) const;
+    // --- внутренние методы ---
+
+    [[nodiscard]] std::string insert_implicit_multiplication(const std::string& expr) const;
+
+    // Преобразует инфиксную запись в постфиксную (обратную польскую нотацию)
+    [[nodiscard]] std::vector<std::string> infix_to_postfix(const std::string& expr) const;
+
+    // Выполняет вычисление выражения в постфиксной записи
+    [[nodiscard]] Polynomial evaluate_postfix(const std::vector<std::string>& tokens) const;
+
+    // Проверяет, является ли токен функцией (DER, GCD, FAC, NMR)
+    [[nodiscard]] bool is_function(const std::string& token) const;
+
+    // Проверяет, является ли токен оператором (+, -, *, /, %)
+    [[nodiscard]] bool is_operator(const std::string& token) const;
+
+    // Проверяет, является ли токен числом/коэффициентом
+    [[nodiscard]] bool is_number(const std::string& token) const;
+
+    // Проверяет, является ли токен мономом, например "x", "x^2", "3x^5"
+    [[nodiscard]] bool is_monom(const std::string& token) const;
+
+    // Возвращает приоритет оператора
+    [[nodiscard]] int precedence(const std::string& op) const;
+
+    // Преобразует строку (моном или число) в Polynomial
+    [[nodiscard]] Polynomial parse_polynomial(const std::string& token) const;
+
+    // Разбивает строку на токены
+    [[nodiscard]] std::vector<std::string> tokenize(const std::string& expr) const;
 };
 

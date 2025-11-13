@@ -27,7 +27,7 @@ ApplicationWindow {
     property bool newInput: true
     
     // токены для группового удаления
-    property var groupTokens: ["GCD(", "d/dx(", "FAC(", "NMR(", "^2", "^3", "^4", "^5", "^6", "^7", "^8", "^9", ","]
+    property var groupTokens: ["GCD(", "DER(", "FAC(", "NMR(", "^2", "^3", "^4", "^5", "^6", "^7", "^8", "^9", ","]
     
     color: backgroundColor
     
@@ -303,7 +303,7 @@ ApplicationWindow {
                     CalculatorButton {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        buttonText: "d/dx"
+                        buttonText: "DER"
                         buttonType: "function"
                         fontSize: 14
                         onClicked: handleFunction("derivative")
@@ -378,7 +378,7 @@ ApplicationWindow {
     function handleFunction(funcName) {
         var funcDisplay = {
             "gcd": "GCD(",
-            "derivative": "d/dx(",
+            "derivative": "DER(",
             "factorize": "FAC(",
             "nmr": "NMR("
         }

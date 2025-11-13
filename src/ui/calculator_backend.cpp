@@ -58,6 +58,8 @@ QString CalculatorBackend::convertFromQmlFormat(const QString& qmlExpression) {
         result.replace(it.key(), it.value());
     }
     
+    // TODO: калькулятор не должен этим заниматься
+
     QRegularExpression numberBeforeBracket("(\\d)\\(");
     result.replace(numberBeforeBracket, "\\1*(");
     
@@ -67,7 +69,7 @@ QString CalculatorBackend::convertFromQmlFormat(const QString& qmlExpression) {
         throw std::invalid_argument("Недопустимо: x в показателе степени");
     }
     
-    // Заменяем "xx" на "(x)*(x)" для умножения переменных
+    // Заменяем "xx" на "x*x" для умножения переменных
     QRegularExpression multipleXWithCoef("(\\d+(?:/\\d+)?)x{2,}");
     QRegularExpressionMatchIterator it1 = multipleXWithCoef.globalMatch(result);
     
@@ -77,10 +79,10 @@ QString CalculatorBackend::convertFromQmlFormat(const QString& qmlExpression) {
         QString coef = match.captured(1);
         int xCount = match.captured(0).count('x');
         
-        // Создаём строку вида "k*(x)*(x)*(x)"
+        // Создаём строку вида "k*x*x*x"
         QString replacement = coef;
         for (int i = 0; i < xCount; i++) {
-            replacement += "*(x)";
+            replacement += "*x";
         }
         
         replacements.prepend(qMakePair(match.capturedStart(), replacement));
@@ -109,7 +111,7 @@ QString CalculatorBackend::convertFromQmlFormat(const QString& qmlExpression) {
         QString replacement;
         for (int i = 0; i < length; i++) {
             if (i > 0) replacement += "*";
-            replacement += "(x)";
+            replacement += "x";
         }
         
         result.replace(start, length, replacement);
@@ -123,25 +125,15 @@ QString CalculatorBackend::convertFromQmlFormat(const QString& qmlExpression) {
 QString CalculatorBackend::evaluate(const QString& expression) {
     try {
         QString convertedExpr = convertFromQmlFormat(expression);
-        
-        // Удаляем все пробелы перед отправкой в API
-        convertedExpr.replace(" ", "");
-
-        // Для каждого числа без x добавляем *x^0
-        if (!convertedExpr.contains('x') && !convertedExpr.contains('X')) {
-            QRegularExpression numberPattern("(\\d+(?:/\\d+)?)");
-            convertedExpr.replace(numberPattern, "(\\1)*x^0");
-        }
 
         std::string stdExpression = convertedExpr.toUtf8().constData();
         
         qDebug() << "[Backend] Evaluating:" << QString::fromUtf8(stdExpression.c_str());
 
-        Polynomial result = calculator_.simplify_expression(stdExpression);
-        std::string resultStr = result.as_string();
+        std::string result = calculator_.simplify_expression(stdExpression);
         
-        qDebug() << "[Backend] Raw result:" << QString::fromUtf8(resultStr.c_str());
-        QString formattedResult = formatResult(QString::fromUtf8(resultStr.c_str()));
+        qDebug() << "[Backend] Raw result:" << QString::fromUtf8(result.c_str());
+        QString formattedResult = formatResult(QString::fromUtf8(result.c_str()));
 
         return formattedResult;
         

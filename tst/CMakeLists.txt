@@ -19,7 +19,7 @@ file(GLOB APP_SOURCES
     "${CMAKE_SOURCE_DIR}/src/modules/numbers/rational/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/modules/polynomial/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/modules/calculator/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/user_appearance/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/calculator/*.cpp"
 )
 
 list(REMOVE_ITEM APP_SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
@@ -39,7 +39,7 @@ target_include_directories(tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src/modules/numbers/rational
     ${CMAKE_SOURCE_DIR}/src/modules/polynomial
     ${CMAKE_SOURCE_DIR}/src/modules/calculator
-    ${CMAKE_SOURCE_DIR}/src/user_appearance
+    ${CMAKE_SOURCE_DIR}/src/api/calculator
 )
 
 if(WIN32)
