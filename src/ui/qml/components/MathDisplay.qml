@@ -49,7 +49,7 @@ Item {
             }
             
             // функции
-            var funcMatch = expr.substring(i).match(/^(GCD\(|d\/dx\(|FAC\(|NMR\()/)
+            var funcMatch = expr.substring(i).match(/^(GCD\(|DER\(|FAC\(|NMR\()/)
             if (funcMatch) {
                 if (current) {
                     tokens.push({ type: "text", value: current })
