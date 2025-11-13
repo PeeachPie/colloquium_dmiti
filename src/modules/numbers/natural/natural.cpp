@@ -275,29 +275,16 @@ Natural Natural::MOD_NN_N(const Natural &other) const {
 
 // N-13 | Кисс Илья 4383
 Natural Natural::GCF_NN_N(const Natural &other) const {
-    // Алгоритм Евклида для нахождения НОД
-
-    // Начальные значения
     Natural a = *this;
     Natural b = other;
 
-    // Пока a и b больше 0
-    while (a.NZER_N_B() && b.NZER_N_B()) {
-        // Берем остаток от деления большего на меньшее
-        if (a.COM_NN_D(b) != 1)
-            a = a.MOD_NN_N(b);
-        else
-            b = b.MOD_NN_N(a);
+    while (b.NZER_N_B()) {
+        Natural r = a.MOD_NN_N(b);
+        a = b;
+        b = r;
     }
 
-    // После завершения цикла выбираем максимальное из двух оставшихся чисел
-    Natural max;
-    if (a.COM_NN_D(b) != 1)
-        max = a;
-    else
-        max = b;
-
-    return max;
+    return a; // когда b == 0, a == НОД
 }
 
 // N-14 | Кисс Илья 4383

@@ -18,6 +18,7 @@ Polynomial::Polynomial(std::vector<std::pair<int, std::string>> polynomial) {
     c_ = clean.c_;
 }
 
+
 std::string Polynomial::as_string() const {
     Polynomial clean = this->NORM_P_P();
 
@@ -275,7 +276,7 @@ Polynomial Polynomial::DER_P_P() const {
         result.c_[p.first - 1] = p.second.MUL_QQ_Q(d);
     }
 
-    result.m_ = clean.m_ - 1;
+    result.m_ = std::max(clean.m_ - 1, 0); // max - для случая, когда полином константа
 
     return result;
 }

@@ -1,532 +1,289 @@
 #include "calculator.hpp"
-#include "polynomial.hpp"
-#include "rational.hpp"
-
-#include <stdexcept>
+#include <sstream>
 #include <regex>
-#include <string>
+#include <stdexcept>
 #include <cctype>
-#include <iostream>
+#include <algorithm>
 
-#define PARSER_DEBUG 0
-#if PARSER_DEBUG
-#define PARSER_LOG(msg) std::cerr << "[PARSER] " << msg << std::endl
-#else
-#define PARSER_LOG(msg)
-#endif
-
-// ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
-
-std::string Calculator::normalize_spaces(const std::string& str) const {
-    std::string result = str;
-    result.erase(std::remove_if(result.begin(), result.end(),
-        [](unsigned char c) { return std::isspace(c); }), result.end());
-    return result;
-}
-
-Polynomial Calculator::simplify_expression(const std::string& expression) const {
-    std::string normalized = normalize_spaces(expression);
-    Polynomial result = parse_expression(normalized);
-    return result.NORM_P_P();
-}
-
-size_t Calculator::find_matching_bracket(const std::string& str, size_t start_pos) const {
-    if (start_pos >= str.length() || str[start_pos] != '(') {
-        return std::string::npos;
-    }
-    
-    int depth = 1;
-    for (size_t i = start_pos + 1; i < str.length(); ++i) {
-        if (str[i] == '(') {
-            depth++;
-        } else if (str[i] == ')') {
-            depth--;
-            if (depth == 0) {
-                return i;
-            }
-        }
-    }
-    return std::string::npos;
-}
-
-bool Calculator::is_function_call(const std::string& str, size_t& func_name_end) const {
-    func_name_end = 0;
-    
-    std::vector<std::string> func_names = {"НОД", "НОК", "Производная", "Факторизация"};
-    
-    for (const auto& func : func_names) {
-        if (str.length() >= func.length() && str.substr(0, func.length()) == func) {
-            func_name_end = func.length();
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-std::pair<std::string, std::string> Calculator::parse_function_args(const std::string& str, size_t start_pos, size_t end_pos) const {
-    std::string args_str = str.substr(start_pos, end_pos - start_pos);
-    
-    // Ищем запятую на верхнем уровне вложенности
-    int depth = 0;
-    size_t comma_pos = std::string::npos;
-    
-    for (size_t i = 0; i < args_str.length(); ++i) {
-        if (args_str[i] == '(') {
-            depth++;
-        } else if (args_str[i] == ')') {
-            depth--;
-        } else if (args_str[i] == ',' && depth == 0) {
-            comma_pos = i;
-            break;
-        }
-    }
-    
-    if (comma_pos != std::string::npos) {
-        std::string first = args_str.substr(0, comma_pos);
-        std::string second = args_str.substr(comma_pos + 1);
-        return {first, second};
-    }
-    
-    return {args_str, ""};
-}
-
-// ==================== ПАРСИНГ ПОЛИНОМА ====================
-
-std::pair<int, std::string> Calculator::parse_term(const std::string& term) const {
-
-    if (term.empty()) {
-        return {0, "0"};
-    }
-    
-    std::string coef_str = "1";
-    std::string degree_str = "0";
-    
-    size_t x_pos = term.find('x');
-    
-    if (x_pos == std::string::npos) {
-        coef_str = term;
-        degree_str = "0";
-    } else {
-        std::string before_x = (x_pos > 0) ? term.substr(0, x_pos) : "";
-        std::string after_x = (x_pos + 1 < term.length()) ? term.substr(x_pos + 1) : "";
-
-        while (!before_x.empty() && (before_x.back() == '*' || before_x.back() == ' ')) {
-            before_x.pop_back();
-        }
+std::string Calculator::insert_implicit_multiplication(const std::string& expr) const {
+    std::string res;
+    for (size_t i = 0; i < expr.size(); ++i) {
+        char c = expr[i];
+        res += c;
         
-        if (before_x.empty() || before_x == "+") {
-            coef_str = "1";
-        } else if (before_x == "-") {
-            coef_str = "-1";
-        } else {
-            coef_str = before_x;
-        }
-        
-        if (after_x.empty()) {
-            degree_str = "1";
-        } else if (!after_x.empty() && after_x[0] == '*') {
-            if (after_x.length() > 1 && after_x[1] == '^') {
-                size_t degree_start = 2;
-                if (degree_start < after_x.length()) {
-                    degree_str = after_x.substr(degree_start);
-                } else {
-                    degree_str = "1";
-                }
-            } else {
-                degree_str = "1";
+        if (i + 1 < expr.size()) {
+            char next = expr[i + 1];
+            
+            // Случаи, когда нужно вставить умножение:
+            // 1. число перед x: "3x" -> "3*x"
+            // 2. x перед числом: "x3" -> "x*3" 
+            // 3. число перед скобкой: "3(x+1)" -> "3*(x+1)"
+            // 4. x перед скобкой: "x(x+1)" -> "x*(x+1)"
+            // 5. скобка перед x или числом: "(x+1)(x+2)" -> "(x+1)*(x+2)"
+            // 6. скобка перед скобкой: ")(" -> ")*("
+            
+            bool can_insert = false;
+            
+            if (isdigit(c) && (next == 'x' || next == 'X' || next == '(')) {
+                can_insert = true; // число перед x или скобкой
             }
-        } else if (!after_x.empty() && after_x[0] == '^') {
-            size_t degree_start = 1;
-            if (degree_start < after_x.length()) {
-                degree_str = after_x.substr(degree_start);
-            } else {
-                degree_str = "1";
+            else if ((c == 'x' || c == 'X') && (isdigit(next) || next == '(')) {
+                can_insert = true; // x перед числом или скобкой
             }
-        } else {
-            degree_str = "1";
+            else if (c == ')' && (next == '(' || isdigit(next) || next == 'x' || next == 'X')) {
+                can_insert = true; // скобка перед скобкой, числом или x
+            }
+            else if (isdigit(c) && next == '(') {
+                can_insert = true; // число перед скобкой
+            }
+            
+            if (can_insert && !(c == '/' && isdigit(next))) {
+                res += '*';
+            }
         }
     }
+    return res;
+}
+
+std::vector<std::string> Calculator::tokenize(const std::string& expr) const {
+    std::vector<std::string> tokens;
+    std::string current;
+
+    auto flush = [&]() {
+        if (!current.empty()) {
+            tokens.push_back(current);
+            current.clear();
+        }
+    };
+
+    for (char c : expr) {
+        if (isspace(c)) continue;
+
+        if (std::string("+-*/%(),").find(c) != std::string::npos) {
+            flush();
+            tokens.emplace_back(1, c);
+        } else {
+            current += c;
+        }
+    }
+    flush();
+    return tokens;
+}
+
+bool Calculator::is_operator(const std::string& token) const {
+    static const std::set<std::string> ops = {"+", "-", "*", "/", "%"};
+    return ops.count(token);
+}
+
+bool Calculator::is_function(const std::string& token) const {
+    static const std::set<std::string> funcs = {"DER", "GCD", "FAC", "NMR"};
+    return funcs.count(token);
+}
+
+bool Calculator::is_number(const std::string& token) const {
+    // число или дробь, включая отрицательные
+    return std::regex_match(token, std::regex("^-?[0-9]+(/[0-9]+)?$"));
+}
+
+bool Calculator::is_monom(const std::string& token) const {
+    // Допустимые форматы: x, x^100, 3x, -2x^2, 1/2x^5, 5 (число без x)
+    return std::regex_match(token, std::regex(R"(^(-?[0-9]+(/[0-9]+)?)?x(\^[0-9]+)?$)")) || is_number(token);
+}
+
+int Calculator::precedence(const std::string& op) const {
+    if (op == "+" || op == "-") return 1;
+    if (op == "*" || op == "/" || op == "%") return 2;
+    return 0;
+}
+
+std::vector<std::string> Calculator::infix_to_postfix(const std::string& expr) const {
+    std::string normalized = insert_implicit_multiplication(expr);
+    std::vector<std::string> tokens = tokenize(normalized);
+    std::vector<std::string> output;
+    std::stack<std::string> ops;
+
+    for (const std::string& token : tokens) {
+        if (is_number(token) || is_monom(token) || token == "x") {
+            output.push_back(token);
+        } else if (is_function(token)) {
+            ops.push(token);
+        } else if (token == ",") {
+            while (!ops.empty() && ops.top() != "(") {
+                output.push_back(ops.top());
+                ops.pop();
+            }
+            if (ops.empty() || ops.top() != "(") {
+                throw std::runtime_error("Mismatched commas in expression");
+            }
+        } else if (is_operator(token)) {
+            while (!ops.empty() && is_operator(ops.top()) &&
+                   precedence(ops.top()) >= precedence(token)) {
+                output.push_back(ops.top());
+                ops.pop();
+            }
+            ops.push(token);
+        } else if (token == "(") {
+            ops.push(token);
+        } else if (token == ")") {
+            while (!ops.empty() && ops.top() != "(") {
+                output.push_back(ops.top());
+                ops.pop();
+            }
+            if (ops.empty()) {
+                throw std::runtime_error("Mismatched parentheses");
+            }
+            ops.pop(); // remove "("
+            if (!ops.empty() && is_function(ops.top())) {
+                output.push_back(ops.top());
+                ops.pop();
+            }
+        }
+    }
+
+    while (!ops.empty()) {
+        if (ops.top() == "(") {
+            throw std::runtime_error("Mismatched parentheses");
+        }
+        output.push_back(ops.top());
+        ops.pop();
+    }
+    return output;
+}
+
+Polynomial Calculator::parse_polynomial(const std::string& token) const {
+    // Обработка чистых чисел (константных полиномов)
+    if (is_number(token)) {
+        return Polynomial({{0, token}});
+    }
     
-    int degree = 0;
+    // Обработка мономов с x
+    std::regex r(R"(^(-?[0-9]+(/[0-9]+)?)?x(\^([0-9]+))?$)");
+    std::smatch m;
+
+    if (!std::regex_match(token, m, r)) {
+        throw std::runtime_error("Invalid polynomial token: " + token);
+    }
+
+    std::string coef_str = m[1].str();
+    std::string pow_str = m[4].str();
+
+    // Определяем коэффициент
+    if (coef_str.empty()) {
+        coef_str = "1"; // x означает 1*x
+    } else if (coef_str == "-") {
+        coef_str = "-1"; // -x означает -1*x
+    }
+
+    // Определяем степень
+    int deg = pow_str.empty() ? 1 : stoi(pow_str);
+    if (deg < 0) {
+        throw std::runtime_error("Negative exponents are not allowed");
+    }
+
+    return Polynomial({{deg, coef_str}});
+}
+
+Polynomial Calculator::evaluate_postfix(const std::vector<std::string>& tokens) const {
+    std::stack<Polynomial> st;
+
+    for (const std::string& token : tokens) {
+        if (is_number(token) || is_monom(token) || token == "x") {
+            st.push(parse_polynomial(token));
+        } else if (is_operator(token)) {
+            if (st.size() < 2) throw std::runtime_error("Not enough operands for operator " + token);
+            Polynomial b = st.top(); st.pop();
+            Polynomial a = st.top(); st.pop();
+
+            if (token == "+") st.push(a.ADD_PP_P(b));
+            else if (token == "-") st.push(a.SUB_PP_P(b));
+            else if (token == "*") st.push(a.MUL_PP_P(b));
+            else if (token == "/") st.push(a.DIV_PP_P(b));
+            else if (token == "%") st.push(a.MOD_PP_P(b));
+        } else if (is_function(token)) {
+            if (token == "DER" || token == "NMR") {
+                if (st.empty()) throw std::runtime_error("Missing argument for function " + token);
+                Polynomial p = st.top(); st.pop();
+                if (token == "DER") st.push(p.DER_P_P());
+                else if (token == "NMR") st.push(p.NMR_P_P());
+            } else if (token == "FAC") {
+                if (st.empty()) throw std::runtime_error("Missing argument for function FAC");
+                Polynomial p = st.top(); st.pop();
+                auto [r, q] = p.FAC_P_Q();
+                st.push(q); // возвращаем полиномиальную часть
+            } else if (token == "GCD") {
+                if (st.size() < 2) throw std::runtime_error("Missing arguments for GCD");
+                Polynomial b = st.top(); st.pop();
+                Polynomial a = st.top(); st.pop();
+                st.push(a.GCF_PP_P(b));
+            }
+        }
+    }
+
+    if (st.size() != 1) throw std::runtime_error("Invalid expression - stack has " + std::to_string(st.size()) + " elements");
+    return st.top();
+}
+
+std::string Calculator::simplify_expression(const std::string& expression) const {
     try {
-        degree = std::stoi(degree_str);
-    } catch (...) {
-        degree = 0;
-    }
-    
-    return {degree, coef_str};
-}
-
-Polynomial Calculator::parse_polynomial(const std::string& str) const {
-    if (str.empty()) {
-        return Polynomial();
-    }
-    
-    std::vector<std::pair<int, std::string>> terms_vector;
-    
-    std::vector<std::string> terms;
-    std::string current_term;
-    bool is_negative = false;
-    bool first_term = true;
-    
-    for (size_t i = 0; i < str.length(); ++i) {
-        char c = str[i];
+        std::string processed = expression;
         
-        if (c == '+' || c == '-') {
-            if (!current_term.empty()) {
-                if (is_negative) {
-                    current_term = "-" + current_term;
-                }
-                terms.push_back(current_term);
-                current_term.clear();
-                is_negative = false;
-            } else if (first_term && c == '-') {
-                is_negative = true;
+        std::erase_if(processed, ::isspace);
+        
+        // Обрабатываем выражения в степени x^(...)
+        std::regex exponent_expr(R"(x\^(\([^()]+\)))");
+        std::smatch match;
+        std::string temp = processed;
+        
+        while (std::regex_search(temp, match, exponent_expr)) {
+            std::string expr_in_parens = match[1].str();
+            std::string inner_expr = expr_in_parens.substr(1, expr_in_parens.length() - 2);
+            
+            std::string exponent_result = simplify_expression(inner_expr);
+            
+            if (exponent_result.find("Error:") == 0) {
+                throw std::runtime_error("Invalid exponent expression");
             }
-            if (c == '-') {
-                is_negative = true;
+            
+            if (exponent_result.find('x') != std::string::npos || exponent_result.find('X') != std::string::npos) {
+                throw std::runtime_error("Exponent must be a constant (cannot contain variable x)");
             }
-            first_term = false;
-        } else {
-            current_term += c;
-            first_term = false;
-        }
-    }
-    
-    if (!current_term.empty()) {
-        if (is_negative) {
-            current_term = "-" + current_term;
-        }
-        terms.push_back(current_term);
-    }
-
-    if (terms.empty()) {
-        terms.push_back(str);
-    }
-    
-    for (const auto& term : terms) {
-        if (term.empty()) continue;
-
-        auto [degree, coef] = parse_term(term);
-        if (!coef.empty() && coef != "0") {
-            terms_vector.push_back({degree, coef});
-        }
-    }
-    
-    if (terms_vector.empty()) {
-        return Polynomial();
-    }
-    
-    return Polynomial(terms_vector);
-}
-
-// ==================== ПАРСИНГ ВЫРАЖЕНИЙ ====================
-
-bool Calculator::is_simple_polynomial(const std::string& str) const {
-    
-    PARSER_LOG("is_simple_polynomial('" + str + "')");
-    
-    if (str.empty()) {
-        PARSER_LOG("  -> false (empty)");
-        return false;
-    }
-
-    if (str.find('(') != std::string::npos || str.find(')') != std::string::npos) {
-        PARSER_LOG("  -> false (has brackets)");
-        return false;
-    }
-    
-    size_t func_name_end = 0;
-    if (is_function_call(str, func_name_end)) {
-        PARSER_LOG("  -> false (is function)");
-        return false;
-    }
-    
-    if (str.find('x') == std::string::npos) {
-        PARSER_LOG("  -> true (no x, constant)");
-        return true;
-    }
-    
-    for (size_t i = 0; i < str.length(); ++i) {
-        if (str[i] == '*') {
-            if (i + 1 < str.length() && (str[i+1] == 'x' || str[i+1] == '^')) {
-                continue;
+            
+            std::regex number_regex("^-?[0-9]+$");
+            if (!std::regex_match(exponent_result, number_regex)) {
+                throw std::runtime_error("Exponent must be a non-negative integer");
             }
-            if (i + 1 < str.length() && std::isdigit(str[i+1])) {
-                return false;
+            
+            int exponent_value = std::stoi(exponent_result);
+            if (exponent_value < 0) {
+                throw std::runtime_error("Negative exponents are not allowed");
             }
+            
+            std::string replacement = "x^" + exponent_result;
+            size_t pos = temp.find(match[0].str());
+            temp.replace(pos, match[0].length(), replacement);
         }
         
-        if (str[i] == '/') {
-            bool has_x_before = false;
-            bool has_x_after = false;
-            
-            for (size_t j = 0; j < i; ++j) {
-                if (str[j] == 'x') {
-                    has_x_before = true;
-                    break;
-                }
-            }
-            
-            for (size_t j = i + 1; j < str.length(); ++j) {
-                if (str[j] == 'x') {
-                    has_x_after = true;
-                    break;
-                }
-            }
-            
-            if (has_x_before) {
-                PARSER_LOG("  -> false (has x before /)");
-                return false;
-            }
-        }
-    }
-    
-    PARSER_LOG("  -> true (simple polynomial)");
-    return true;
-}
-
-Polynomial Calculator::parse_expression(const std::string& str) const {
-    PARSER_LOG("parse_expression('" + str + "')");
-    
-    if (str.empty()) {
-        return Polynomial();
-    }
-    
-    std::string trimmed = str;
-    
-    while (!trimmed.empty() && trimmed[0] == ' ') {
-        trimmed = trimmed.substr(1);
-    }
-    while (!trimmed.empty() && trimmed.back() == ' ') {
-        trimmed.pop_back();
-    }
-    
-    if (trimmed.empty()) {
-        return Polynomial();
-    }
-    
-    if (is_simple_polynomial(trimmed)) {
-        PARSER_LOG("  -> parsing as simple polynomial");
-        return parse_polynomial(trimmed);
-    }
-    
-    PARSER_LOG("  -> NOT simple polynomial, searching for operators");
-    PARSER_LOG("  -> searching for low-priority operators (+, -)");
-    int depth = 0;
-    for (int i = static_cast<int>(trimmed.length()) - 1; i >= 0; --i) {
-        if (trimmed[i] == ')') {
-            depth++;
-        } else if (trimmed[i] == '(') {
-            depth--;
-        } else if (depth == 0 && (trimmed[i] == '+' || trimmed[i] == '-')) {
-            PARSER_LOG("     found '" + std::string(1, trimmed[i]) + "' at pos " + std::to_string(i));
-            if (i == 0) continue;
-            
-            if (i > 0 && (trimmed[i-1] == '+' || trimmed[i-1] == '-' ||
-                          trimmed[i-1] == '*' || trimmed[i-1] == '/' || trimmed[i-1] == '(')) {
-                continue;
-            }
-            
-            std::string left = trimmed.substr(0, i);
-            std::string right = trimmed.substr(i + 1);
-            
-            Polynomial left_poly = parse_expression(left);
-            Polynomial right_poly = parse_expression(right);
-            
-            PARSER_LOG("  -> found low-priority operator at pos " + std::to_string(i));
-            if (trimmed[i] == '+') {
-                return left_poly.ADD_PP_P(right_poly);
-            } else {
-                return left_poly.SUB_PP_P(right_poly);
-            }
-        }
-    }
-    
-    PARSER_LOG("  -> searching for high-priority operators (*, /)");
-    depth = 0;
-    for (int i = static_cast<int>(trimmed.length()) - 1; i >= 0; --i) {
-        if (trimmed[i] == ')') {
-            depth++;
-        } else if (trimmed[i] == '(') {
-            depth--;
-        } else if (depth == 0 && (trimmed[i] == '*' || trimmed[i] == '/')) {
-            PARSER_LOG("     found '" + std::string(1, trimmed[i]) + "' at pos " + std::to_string(i));
-            // Для * проверяем, что это не часть записи коэффициента (2*x или x*^2)
-            if (trimmed[i] == '*' && i + 1 < trimmed.length() &&
-                (trimmed[i+1] == 'x' || trimmed[i+1] == '^')) {
-                continue;
-            }
-            if (trimmed[i] == '*' && i > 0 && 
-                (trimmed[i-1] == 'x' || trimmed[i-1] == '^')) {
-                continue;
-            }
-            
-            // Если / найден на верхнем уровне - это всегда операция деления полиномов
-            // Дробные коэффициенты (2/3x) парсятся в parse_polynomial -> parse_term
-            
-            std::string left = trimmed.substr(0, i);
-            std::string right = trimmed.substr(i + 1);
-            
-            Polynomial left_poly = parse_expression(left);
-            Polynomial right_poly = parse_expression(right);
-            
-            PARSER_LOG("  -> found high-priority operator '" + std::string(1, trimmed[i]) + "' at pos " + std::to_string(i));
-            if (trimmed[i] == '*') {
-                return left_poly.MUL_PP_P(right_poly);
-            } else {
-                return left_poly.DIV_PP_P(right_poly);
-            }
-        }
-    }
-    
-    size_t func_name_end = 0;
-    if (is_function_call(trimmed, func_name_end)) {
-        std::string func_name = trimmed.substr(0, func_name_end);
+        processed = temp;
         
-        if (func_name == "НОД" || func_name == "НОК") {
-            if (trimmed[func_name_end] != '(') {
-                throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
-            }
-            
-            size_t args_start = func_name_end + 1;
-            size_t args_end = find_matching_bracket(trimmed, func_name_end);
-            
-            if (args_end == std::string::npos) {
-                throw std::invalid_argument("Не найдена закрывающая скобка");
-            }
-            
-            auto [first_arg, second_arg] = parse_function_args(trimmed, args_start, args_end);
-            
-            if (second_arg.empty()) {
-                throw std::invalid_argument("Функция НОД/НОК требует два аргумента");
-            }
-            
-            Polynomial first = parse_expression(first_arg);
-            Polynomial second = parse_expression(second_arg);
-            
-            if (func_name == "НОД") {
-                if (!second.NZER_P_B()) {
-                    return first;
-                }
-                if (!first.NZER_P_B()) {
-                    return second;
-                }
-                
-                if (first.DEG_P_N().as_string() == "0" && second.DEG_P_N().as_string() == "0") {
-                    Polynomial gcd_normalized = first.GCF_PP_P(second);
-                    
-                    auto [factor1, _] = first.FAC_P_Q();
-                    auto [factor2, __] = second.FAC_P_Q();
-                    
-                    Natural gcd_num = factor1.numerator().ABS_Z_N().GCF_NN_N(factor2.numerator().ABS_Z_N());
-                    Natural lcm_den = factor1.denominator().LCM_NN_N(factor2.denominator());
-                    Rational gcd_coeff(Integer(gcd_num.as_string()), lcm_den);
-                    
-                    return gcd_normalized.MUL_PQ_P(gcd_coeff);
-                }
-                
-                return first.GCF_PP_P(second);
-            } else {
-                if (!first.NZER_P_B() || !second.NZER_P_B()) {
-                    throw std::invalid_argument("НОК с нулевым полиномом не определен");
-                }
-                
-                if (first.DEG_P_N().as_string() == "0" && second.DEG_P_N().as_string() == "0") {
-                    auto [factor1, _] = first.FAC_P_Q();
-                    auto [factor2, __] = second.FAC_P_Q();
-                    
-                    Natural lcm_num = factor1.numerator().ABS_Z_N().LCM_NN_N(factor2.numerator().ABS_Z_N());
-                    Natural gcd_den = factor1.denominator().GCF_NN_N(factor2.denominator());
-                    Rational lcm_coeff(Integer(lcm_num.as_string()), gcd_den);
-                    
-                    return Polynomial({{0, lcm_coeff.as_string()}});
-                }
-                
-                Polynomial product = first.MUL_PP_P(second);
-                Polynomial gcd = first.GCF_PP_P(second);
-                return product.DIV_PP_P(gcd);
-            }
-        } else if (func_name == "Производная") {
-            if (trimmed[func_name_end] != '(') {
-                throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
-            }
-            
-            size_t args_start = func_name_end + 1;
-            size_t args_end = find_matching_bracket(trimmed, func_name_end);
-            
-            if (args_end == std::string::npos) {
-                throw std::invalid_argument("Не найдена закрывающая скобка");
-            }
-            
-            std::string arg = trimmed.substr(args_start, args_end - args_start);
-            Polynomial poly = parse_expression(arg);
-            return poly.DER_P_P();
-        } else if (func_name == "Факторизация") {
-            if (trimmed[func_name_end] != '(') {
-                throw std::invalid_argument("Ожидается открывающая скобка после имени функции");
-            }
-            
-            size_t args_start = func_name_end + 1;
-            size_t args_end = find_matching_bracket(trimmed, func_name_end);
-            
-            if (args_end == std::string::npos) {
-                throw std::invalid_argument("Не найдена закрывающая скобка");
-            }
-            
-            std::string arg = trimmed.substr(args_start, args_end - args_start);
-            Polynomial poly = parse_expression(arg);
-            auto [rational_part, polynomial_part] = poly.FAC_P_Q();
-            return polynomial_part;
-        }
-    }
-    
-    if (trimmed[0] == '(') {
-        size_t closing = find_matching_bracket(trimmed, 0);
-        
-        if (closing == std::string::npos) {
-            throw std::invalid_argument("Не найдена закрывающая скобка");
+        if (std::regex_search(processed, std::regex("\\^-"))) {
+            throw std::runtime_error("Negative exponents are not allowed");
         }
         
-        if (closing + 1 < trimmed.length()) {
-            char next_char = trimmed[closing + 1];
-            
-            if (next_char == '(') {
-                std::string first_part = trimmed.substr(1, closing - 1);
-                size_t second_closing = find_matching_bracket(trimmed, closing + 1);
-                
-                if (second_closing == std::string::npos) {
-                    throw std::invalid_argument("Не найдена закрывающая скобка для второго выражения");
-                }
-                
-                std::string second_part = trimmed.substr(closing + 2, second_closing - closing - 2);
-                
-                Polynomial first = parse_expression(first_part);
-                Polynomial second = parse_expression(second_part);
-                
-                if (second_closing + 1 < trimmed.length()) {
-                    std::string remaining = trimmed.substr(second_closing + 1);
-                    Polynomial product = first.MUL_PP_P(second);
-                    Polynomial remaining_poly = parse_expression(remaining);
-                    return product.MUL_PP_P(remaining_poly);
-                }
-                
-                return first.MUL_PP_P(second);
-            } else {
-                std::string inner = trimmed.substr(1, closing - 1);
-                std::string after = trimmed.substr(closing + 1);
-                
-                Polynomial inner_poly = parse_expression(inner);
-                Polynomial after_poly = parse_expression(after);
-                
-                return inner_poly.MUL_PP_P(after_poly);
-            }
-        } else {
-            std::string inner = trimmed.substr(1, closing - 1);
-            return parse_expression(inner);
+        // Добавляем 0 перед унарным минусом в начале выражения
+        if (!processed.empty() && processed[0] == '-') {
+            processed = "0" + processed;
         }
+        // Также обрабатываем унарные минусы после скобок
+        processed = std::regex_replace(processed, std::regex("\\(-"), "(0-");
+        
+        processed = std::regex_replace(processed, std::regex("([+\\-*/%])-(\\d+(?:/\\d+)?(?:x(?:\\^\\d+)?)?)"), "$1(0-$2)");
+        
+        processed = std::regex_replace(processed, std::regex(",-"), ",0-");
+        
+        auto postfix = infix_to_postfix(processed);
+        Polynomial result = evaluate_postfix(postfix);
+        return result.as_string();
+    } catch (const std::exception& e) {
+        return "Error: " + std::string(e.what());
     }
-    
-    return parse_polynomial(trimmed);
 }
