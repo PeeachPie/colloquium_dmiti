@@ -1,6 +1,7 @@
 #pragma once
 
 #include "polynomial.hpp"
+#include "continued_fraction.hpp"
 #include <string>
 #include <stack>
 #include <map>
@@ -22,6 +23,9 @@ public:
      *   "GCD(x^2 - 1, x - 1)"
      */
     [[nodiscard]] std::string simplify_expression(const std::string& expression) const;
+    
+    // Парсит выражение и возвращает Polynomial
+    [[nodiscard]] Polynomial parse_expression(const std::string& expression) const;
 
 private:
     // --- внутренние методы ---
