@@ -11,12 +11,14 @@
     #include <QQmlApplicationEngine>
     #include <QQmlContext>
     #include <QIcon>
+    #include <QtQuickControls2/QQuickStyle>
     #include "calculator_backend.hpp"
 #endif
 
 int main(int argc, char *argv[]) {
 #ifdef USE_QT_GUI
     // Если Qt доступен, запускаем GUI версию
+    QQuickStyle::setStyle("Basic");
     QGuiApplication app(argc, argv);
     
     app.setOrganizationName("4383");
