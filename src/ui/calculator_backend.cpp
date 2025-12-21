@@ -167,13 +167,14 @@ QString CalculatorBackend::formatResult(const QString& apiResult) {
     result.replace(xPowerOne, "x");
     
     // Убираем единичный коэффициент "1x" -> "x" (в начале или после операторов)
-    result.replace(QRegularExpression("(^|[+\\-])1x"), "\\1x");
+    result.replace(QRegularExpression("(^|[+\\-\\(])1x"), "\\1x");
+    result.replace(QRegularExpression("([,;])1x"), "\\1x");
     
     // Заменяем "+x" в начале на "x" (убираем лишний плюс в начале)
     if (result.startsWith("+")) {
         result = result.mid(1);
     }
-    
+
     qDebug() << "[Backend] Formatted result:" << result;
     
     return result;

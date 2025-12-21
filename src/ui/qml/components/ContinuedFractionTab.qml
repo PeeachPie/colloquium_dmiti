@@ -45,6 +45,49 @@ Item {
                     renderType: Text.NativeRendering
                 }
                 
+                // Для однострочного результата - MathDisplay
+                MathDisplay {
+                    id: mathResultDisplay
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    expression: ""
+                    baseFontSize: 28
+                    textColor: "#FFFFFF"
+                    visible: !resultLabel.visible
+                }
+                
+                // Для многострочного результата (конвергенты) - ScrollView
+                ScrollView {
+                    id: multiLineResult
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: false
+                    clip: true
+                    
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                    
+                    Column {
+                        id: resultColumn
+                        width: multiLineResult.width
+                        spacing: 4
+                        
+                        Repeater {
+                            id: resultRepeater
+                            model: []
+                            
+                            delegate: MathDisplay {
+                                width: resultColumn.width
+                                height: 32
+                                expression: modelData
+                                baseFontSize: 20
+                                textColor: "#FFFFFF"
+                            }
+                        }
+                    }
+                }
+                
+                // Для текста-заглушки
                 Text {
                     id: resultLabel
                     Layout.fillWidth: true
@@ -58,6 +101,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.Wrap
                     renderType: Text.NativeRendering
+                    visible: true
                 }
             }
         }
@@ -316,8 +360,37 @@ Item {
         denField.text = ""
         cfField.text = ""
         sqrtField.text = ""
+        
+        // Сброс отображения
         resultLabel.text = "Введите данные"
+        resultLabel.visible = true
+        mathResultDisplay.expression = ""
+        mathResultDisplay.visible = false
+        multiLineResult.visible = false
+        resultRepeater.model = []
+        
         historyLabel.text = "Цепные дроби"
+    }
+    
+    function showSingleResult(text) {
+        resultLabel.visible = false
+        multiLineResult.visible = false
+        mathResultDisplay.expression = text
+        mathResultDisplay.visible = true
+    }
+    
+    function showMultiLineResult(lines) {
+        resultLabel.visible = false
+        mathResultDisplay.visible = false
+        resultRepeater.model = lines
+        multiLineResult.visible = true
+    }
+    
+    function showError(text) {
+        mathResultDisplay.visible = false
+        multiLineResult.visible = false
+        resultLabel.text = text
+        resultLabel.visible = true
     }
     
     function calculate() {
@@ -327,7 +400,7 @@ Item {
             switch(currentMode) {
                 case 0: // Q -> CF
                     if (numeratorInput === "" || denominatorInput === "") {
-                        resultLabel.text = "Введите числитель и знаменатель"
+                        showError("Введите числитель и знаменатель")
                         return
                     }
                     result = calculatorBackend.rationalToCF(numeratorInput, denominatorInput)
@@ -336,7 +409,7 @@ Item {
                     
                 case 1: // CF -> Q
                     if (cfInput === "") {
-                        resultLabel.text = "Введите коэффициенты"
+                        showError("Введите коэффициенты")
                         return
                     }
                     result = calculatorBackend.cfToRational(cfInput)
@@ -345,7 +418,7 @@ Item {
                     
                 case 2: // sqrt -> CF
                     if (sqrtInput === "") {
-                        resultLabel.text = "Введите D"
+                        showError("Введите D")
                         return
                     }
                     result = calculatorBackend.sqrtToCF(sqrtInput)
@@ -354,7 +427,7 @@ Item {
                     
                 case 3: // Конвергенты
                     if (cfInput === "") {
-                        resultLabel.text = "Введите коэффициенты"
+                        showError("Введите коэффициенты")
                         return
                     }
                     result = calculatorBackend.cfConvergents(cfInput)
@@ -363,13 +436,17 @@ Item {
             }
             
             if (result.startsWith("Ошибка")) {
-                resultLabel.text = "Ошибка"
+                showError("Ошибка")
+            } else if (currentMode === 3) {
+                // Конвергенты - многострочный вывод
+                var lines = result.split("\n")
+                showMultiLineResult(lines)
             } else {
-                resultLabel.text = result
+                showSingleResult(result)
             }
             
         } catch (error) {
-            resultLabel.text = "Ошибка"
+            showError("Ошибка")
         }
     }
 }

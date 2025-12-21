@@ -45,6 +45,49 @@ Item {
                     renderType: Text.NativeRendering
                 }
 
+                // Для однострочного результата - MathDisplay
+                MathDisplay {
+                    id: mathResultDisplay
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    expression: ""
+                    baseFontSize: 22
+                    textColor: "#FFFFFF"
+                    visible: false
+                }
+                
+                // Для многострочного результата - ScrollView
+                ScrollView {
+                    id: multiLineResult
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: false
+                    clip: true
+                    
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                    
+                    Column {
+                        id: resultColumn
+                        width: multiLineResult.width
+                        spacing: 4
+                        
+                        Repeater {
+                            id: resultRepeater
+                            model: []
+                            
+                            delegate: MathDisplay {
+                                width: resultColumn.width
+                                height: 28
+                                expression: modelData
+                                baseFontSize: 18
+                                textColor: "#FFFFFF"
+                            }
+                        }
+                    }
+                }
+
+                // Для текста-заглушки и ошибок
                 Text {
                     id: resultLabel
                     Layout.fillWidth: true
@@ -58,6 +101,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.Wrap
                     renderType: Text.NativeRendering
+                    visible: true
                 }
             }
         }
@@ -276,8 +320,37 @@ Item {
         numPolyField.text = ""
         denPolyField.text = ""
         pcfField.text = ""
+        
+        // Сброс отображения
         resultLabel.text = "Введите данные"
+        resultLabel.visible = true
+        mathResultDisplay.expression = ""
+        mathResultDisplay.visible = false
+        multiLineResult.visible = false
+        resultRepeater.model = []
+        
         historyLabel.text = "Полиномиальные цепные дроби"
+    }
+    
+    function showSingleResult(text) {
+        resultLabel.visible = false
+        multiLineResult.visible = false
+        mathResultDisplay.expression = text
+        mathResultDisplay.visible = true
+    }
+    
+    function showMultiLineResult(lines) {
+        resultLabel.visible = false
+        mathResultDisplay.visible = false
+        resultRepeater.model = lines
+        multiLineResult.visible = true
+    }
+    
+    function showError(text) {
+        mathResultDisplay.visible = false
+        multiLineResult.visible = false
+        resultLabel.text = text
+        resultLabel.visible = true
     }
 
     function calculate() {
@@ -287,7 +360,7 @@ Item {
             switch(currentMode) {
                 case 0: // P/Q -> PCF
                     if (numeratorPoly === "" || denominatorPoly === "") {
-                        resultLabel.text = "Введите P(x) и Q(x)"
+                        showError("Введите P(x) и Q(x)")
                         return
                     }
                     result = calculatorBackend.polyToPCF(numeratorPoly, denominatorPoly)
@@ -296,7 +369,7 @@ Item {
 
                 case 1: // PCF -> P/Q
                     if (pcfInput === "") {
-                        resultLabel.text = "Введите многочлены"
+                        showError("Введите многочлены")
                         return
                     }
                     result = calculatorBackend.pcfToPoly(pcfInput)
@@ -305,7 +378,7 @@ Item {
 
                 case 2: // Конвергенты
                     if (pcfInput === "") {
-                        resultLabel.text = "Введите многочлены"
+                        showError("Введите многочлены")
                         return
                     }
                     result = calculatorBackend.pcfConvergents(pcfInput)
@@ -314,13 +387,17 @@ Item {
             }
 
             if (result.startsWith("Ошибка")) {
-                resultLabel.text = "Ошибка"
+                showError("Ошибка")
+            } else if (currentMode === 1 || currentMode === 2) {
+                // PCF->P/Q и конвергенты - многострочный вывод
+                var lines = result.split("\n")
+                showMultiLineResult(lines)
             } else {
-                resultLabel.text = result
+                showSingleResult(result)
             }
 
         } catch (error) {
-            resultLabel.text = "Ошибка"
+            showError("Ошибка")
         }
     }
 }
