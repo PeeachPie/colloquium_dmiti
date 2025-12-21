@@ -1,9 +1,149 @@
 #include "calculator_backend.hpp"
 #include <QDebug>
 #include <QRegularExpression>
+#include <QStringList>
 
 CalculatorBackend::CalculatorBackend(QObject *parent)
     : QObject(parent), calculator_() {
+}
+
+std::vector<Integer> CalculatorBackend::parseCoefficients(const QString& input) {
+    std::vector<Integer> result;
+    QStringList parts = input.split(QRegularExpression("[,;\\s]+"), Qt::SkipEmptyParts);
+    
+    for (const QString& part : parts) {
+        QString trimmed = part.trimmed();
+        if (!trimmed.isEmpty()) {
+            result.push_back(Integer(trimmed.toStdString()));
+        }
+    }
+    
+    return result;
+}
+
+QString CalculatorBackend::rationalToCF(const QString& numerator, const QString& denominator) {
+    try {
+        QString numStr = numerator.trimmed();
+        QString denStr = denominator.trimmed();
+        
+        if (numStr.isEmpty() || denStr.isEmpty()) {
+            return "Ошибка: введите числитель и знаменатель";
+        }
+        
+        if (denStr == "0") {
+            return "Ошибка: деление на ноль";
+        }
+        
+        // Обработка знака знаменателя
+        bool denNegative = denStr.startsWith("-");
+        if (denNegative) {
+            denStr = denStr.mid(1);
+            // Меняем знак числителя
+            if (numStr.startsWith("-")) {
+                numStr = numStr.mid(1);
+            } else {
+                numStr = "-" + numStr;
+            }
+        }
+        
+        Integer num(numStr.toStdString());
+        Natural den(denStr.toStdString());
+        
+        Rational r(num, den);
+        
+        ContinuedFraction cf = ContinuedFraction::FROM_Q_CF(r);
+        return QString::fromStdString(cf.as_string());
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+QString CalculatorBackend::cfToRational(const QString& coefficients) {
+    try {
+        std::vector<Integer> coefs = parseCoefficients(coefficients);
+        
+        if (coefs.empty()) {
+            return "Ошибка: введите коэффициенты";
+        }
+        
+        ContinuedFraction cf(coefs);
+        Rational r = cf.TO_CF_Q();
+        
+        return QString::fromStdString(r.as_string());
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+QString CalculatorBackend::sqrtToCF(const QString& d) {
+    try {
+        QString dStr = d.trimmed();
+        
+        if (dStr.isEmpty() || dStr == "0") {
+            return "Ошибка: D должно быть положительным целым";
+        }
+        
+        // Проверка на полный квадрат
+        bool ok;
+        unsigned long long dVal = dStr.toULongLong(&ok);
+        if (ok) {
+            unsigned long long sqrtD = static_cast<unsigned long long>(std::sqrt(static_cast<double>(dVal)));
+            if (sqrtD * sqrtD == dVal) {
+                return QString("[%1] (полный квадрат)").arg(sqrtD);
+            }
+        }
+        
+        ContinuedFraction cf = ContinuedFraction::FROM_SQRT_CF(Natural(dStr.toStdString()));
+        return QString::fromStdString(cf.as_string());
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+QString CalculatorBackend::cfConvergents(const QString& coefficients) {
+    try {
+        std::vector<Integer> coefs = parseCoefficients(coefficients);
+        
+        if (coefs.empty()) {
+            return "Ошибка: введите коэффициенты";
+        }
+        
+        ContinuedFraction cf(coefs);
+        std::vector<Rational> convergents = cf.CONVERGENTS_CF();
+        
+        // Надстрочные цифры для индексов
+        static const QString subscriptDigits[] = {
+            QString::fromUtf8("₀"), QString::fromUtf8("₁"), QString::fromUtf8("₂"),
+            QString::fromUtf8("₃"), QString::fromUtf8("₄"), QString::fromUtf8("₅"),
+            QString::fromUtf8("₆"), QString::fromUtf8("₇"), QString::fromUtf8("₈"),
+            QString::fromUtf8("₉")
+        };
+        
+        auto toSubscript = [&](size_t n) -> QString {
+            if (n == 0) return subscriptDigits[0];
+            QString result;
+            while (n > 0) {
+                result.prepend(subscriptDigits[n % 10]);
+                n /= 10;
+            }
+            return result;
+        };
+        
+        QStringList result;
+        for (size_t i = 0; i < convergents.size(); ++i) {
+            result << QString("p%1/q%1 = %2")
+                      .arg(toSubscript(i))
+                      .arg(QString::fromStdString(convergents[i].as_string()));
+        }
+        
+        return result.join("\n");
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
 }
 
 QString CalculatorBackend::formatResult(const QString& apiResult) {
@@ -35,6 +175,51 @@ QString CalculatorBackend::formatResult(const QString& apiResult) {
     }
     
     qDebug() << "[Backend] Formatted result:" << result;
+    
+    return result;
+}
+
+QString CalculatorBackend::formatPolynomialPretty(const QString& poly) {
+    QString result = formatResult(poly);
+    
+    // Заменяем степени на надстрочные символы
+    static const QMap<QChar, QChar> superscriptDigits = {
+        {'0', QChar(0x2070)}, // ⁰
+        {'1', QChar(0x00B9)}, // ¹
+        {'2', QChar(0x00B2)}, // ²
+        {'3', QChar(0x00B3)}, // ³
+        {'4', QChar(0x2074)}, // ⁴
+        {'5', QChar(0x2075)}, // ⁵
+        {'6', QChar(0x2076)}, // ⁶
+        {'7', QChar(0x2077)}, // ⁷
+        {'8', QChar(0x2078)}, // ⁸
+        {'9', QChar(0x2079)}  // ⁹
+    };
+    
+    // Находим все ^число и заменяем на надстрочные
+    QRegularExpression powerRegex("\\^(\\d+)");
+    QRegularExpressionMatchIterator it = powerRegex.globalMatch(result);
+    
+    // Собираем замены в обратном порядке
+    QList<QPair<int, QPair<int, QString>>> replacements;
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        QString digits = match.captured(1);
+        QString superscript;
+        for (const QChar& c : digits) {
+            if (superscriptDigits.contains(c)) {
+                superscript += superscriptDigits[c];
+            } else {
+                superscript += c;
+            }
+        }
+        replacements.prepend(qMakePair(match.capturedStart(), qMakePair(match.capturedLength(), superscript)));
+    }
+    
+    // Применяем замены
+    for (const auto& repl : replacements) {
+        result.replace(repl.first, repl.second.first, repl.second.second);
+    }
     
     return result;
 }
@@ -141,7 +326,7 @@ QString CalculatorBackend::evaluate(const QString& expression) {
             return QString("Ошибка");
         }
         
-        QString formattedResult = formatResult(QString::fromUtf8(result.c_str()));
+        QString formattedResult = formatPolynomialPretty(QString::fromUtf8(result.c_str()));
 
         return formattedResult;
         
@@ -165,6 +350,138 @@ bool CalculatorBackend::validate(const QString& expression) {
         
     } catch (...) {
         return false;
+    }
+}
+
+std::vector<Polynomial> CalculatorBackend::parsePolynomials(const QString& input) {
+    std::vector<Polynomial> result;
+    QStringList parts = input.split(";", Qt::SkipEmptyParts);
+    
+    for (const QString& part : parts) {
+        QString trimmed = part.trimmed();
+        if (!trimmed.isEmpty()) {
+            QString converted = convertFromQmlFormat(trimmed);
+            result.push_back(calculator_.parse_expression(converted.toStdString()));
+        }
+    }
+    
+    return result;
+}
+
+QString CalculatorBackend::polyToPCF(const QString& numerator, const QString& denominator) {
+    try {
+        QString numStr = numerator.trimmed();
+        QString denStr = denominator.trimmed();
+        
+        if (numStr.isEmpty() || denStr.isEmpty()) {
+            return "Ошибка: введите P(x) и Q(x)";
+        }
+        
+        QString numConverted = convertFromQmlFormat(numStr);
+        QString denConverted = convertFromQmlFormat(denStr);
+        
+        Polynomial P = calculator_.parse_expression(numConverted.toStdString());
+        Polynomial Q = calculator_.parse_expression(denConverted.toStdString());
+        
+        PolynomialContinuedFraction pcf = PolynomialContinuedFraction::FROM_PQ_PCF(P, Q);
+        QString raw = QString::fromStdString(pcf.as_string());
+        
+        // Форматируем каждый полином в цепной дроби
+        // Формат: [P0; P1, P2, ...]
+        // Разбиваем и форматируем
+        raw.replace("[", "");
+        raw.replace("]", "");
+        QStringList parts = raw.split(QRegularExpression("[;,]"));
+        QStringList formatted;
+        for (int i = 0; i < parts.size(); ++i) {
+            formatted << formatPolynomialPretty(parts[i].trimmed());
+        }
+        
+        if (formatted.isEmpty()) {
+            return "[]";
+        }
+        
+        QString result = "[" + formatted[0];
+        for (int i = 1; i < formatted.size(); ++i) {
+            result += (i == 1 ? "; " : ", ") + formatted[i];
+        }
+        result += "]";
+        
+        return result;
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+QString CalculatorBackend::pcfToPoly(const QString& polynomials) {
+    try {
+        std::vector<Polynomial> polys = parsePolynomials(polynomials);
+        
+        if (polys.empty()) {
+            return "Ошибка: введите многочлены";
+        }
+        
+        PolynomialContinuedFraction pcf(polys);
+        auto [P, Q] = pcf.TO_PCF_PQ();
+        
+        QString pFormatted = formatPolynomialPretty(QString::fromStdString(P.as_string()));
+        QString qFormatted = formatPolynomialPretty(QString::fromStdString(Q.as_string()));
+        
+        QString result = QString("P(x) = %1\nQ(x) = %2")
+            .arg(pFormatted)
+            .arg(qFormatted);
+        
+        return result;
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+QString CalculatorBackend::pcfConvergents(const QString& polynomials) {
+    try {
+        std::vector<Polynomial> polys = parsePolynomials(polynomials);
+        
+        if (polys.empty()) {
+            return "Ошибка: введите многочлены";
+        }
+        
+        PolynomialContinuedFraction pcf(polys);
+        auto convergents = pcf.CONVERGENTS_PCF();
+        
+        // Подстрочные цифры для индексов
+        static const QString subscriptDigits[] = {
+            QString::fromUtf8("₀"), QString::fromUtf8("₁"), QString::fromUtf8("₂"),
+            QString::fromUtf8("₃"), QString::fromUtf8("₄"), QString::fromUtf8("₅"),
+            QString::fromUtf8("₆"), QString::fromUtf8("₇"), QString::fromUtf8("₈"),
+            QString::fromUtf8("₉")
+        };
+        
+        auto toSubscript = [&](size_t n) -> QString {
+            if (n == 0) return subscriptDigits[0];
+            QString result;
+            while (n > 0) {
+                result.prepend(subscriptDigits[n % 10]);
+                n /= 10;
+            }
+            return result;
+        };
+        
+        QStringList result;
+        for (size_t i = 0; i < convergents.size(); ++i) {
+            QString pStr = formatPolynomialPretty(QString::fromStdString(convergents[i].first.as_string()));
+            QString qStr = formatPolynomialPretty(QString::fromStdString(convergents[i].second.as_string()));
+            result << QString("C%1: %2 / %3")
+                      .arg(toSubscript(i))
+                      .arg(pStr)
+                      .arg(qStr);
+        }
+        
+        return result.join("\n");
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
     }
 }
 
