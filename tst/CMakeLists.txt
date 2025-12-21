@@ -18,6 +18,7 @@ file(GLOB APP_SOURCES
     "${CMAKE_SOURCE_DIR}/src/modules/numbers/integer/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/modules/numbers/rational/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/modules/polynomial/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/modules/continued_fraction/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/modules/calculator/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/calculator/*.cpp"
 )
@@ -38,6 +39,7 @@ target_include_directories(tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src/modules/numbers/integer
     ${CMAKE_SOURCE_DIR}/src/modules/numbers/rational
     ${CMAKE_SOURCE_DIR}/src/modules/polynomial
+    ${CMAKE_SOURCE_DIR}/src/modules/continued_fraction
     ${CMAKE_SOURCE_DIR}/src/modules/calculator
     ${CMAKE_SOURCE_DIR}/src/api/calculator
 )
