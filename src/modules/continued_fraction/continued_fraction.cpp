@@ -579,6 +579,38 @@ std::pair<Polynomial, Polynomial> PolynomialContinuedFraction::TO_PCF_PQ() const
         k_curr = k_new;
     }
     
+    // выносим общий рациональный множитель
+    // FAC_P_Q возвращает (множитель, нормализованный многочлен с целыми коэффициентами)
+    if (h_curr.NZER_P_B()) {
+        auto [fac_h, norm_h] = h_curr.FAC_P_Q();
+        h_curr = norm_h;
+    }
+    if (k_curr.NZER_P_B()) {
+        auto [fac_k, norm_k] = k_curr.FAC_P_Q();
+        k_curr = norm_k;
+    }
+    
+    // сокращаем на НОД
+    if (h_curr.NZER_P_B() && k_curr.NZER_P_B()) {
+        Polynomial gcd = h_curr.GCF_PP_P(k_curr);
+        if (gcd.NZER_P_B()) {
+            Polynomial one({{0, "1"}});
+            if (!gcd.EQ_PP_B(one)) {
+                h_curr = h_curr.DIV_PP_P(gcd);
+                k_curr = k_curr.DIV_PP_P(gcd);
+            }
+        }
+    }
+    
+    // знак
+    if (k_curr.NZER_P_B()) {
+        Rational k_lead = k_curr.LED_P_Q();
+        if (k_lead.numerator().SGN_Z_D() < 0) {
+            h_curr = h_curr.MUL_PQ_P(Rational("-1"));
+            k_curr = k_curr.MUL_PQ_P(Rational("-1"));
+        }
+    }
+    
     return {h_curr, k_curr};
 }
 
