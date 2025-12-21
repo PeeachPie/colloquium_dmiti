@@ -22,485 +22,334 @@ ApplicationWindow {
     readonly property color surfaceColor: "#1C1C1E"
     readonly property color primaryColor: "#007AFF"
     
-    property string currentInput: "0"
-    property string currentOperation: ""
-    property bool newInput: true
-    
-    // токены для группового удаления
-    property var groupTokens: ["GCD(", "DER(", "FAC(", "NMR(", "^2", "^3", "^4", "^5", "^6", "^7", "^8", "^9", ",", "Ошибка"]
+    property int currentTab: 0  // 0: Полиномы, 1: Цепные дроби, 2: Полиномиальные ЦД
     
     color: backgroundColor
     
+    Drawer {
+        id: drawer
+        width: 280
+        height: mainWindow.height
+        
+        background: Rectangle {
+            color: surfaceColor
+        }
+        
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 0
+            spacing: 0
+            
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 100
+                color: backgroundColor
+                
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 20
+                    spacing: 4
+                    
+                    Item { Layout.fillHeight: true }
+                    
+                    Text {
+                        text: "4383"
+                        font.pixelSize: 28
+                        font.family: "SF Pro Display"
+                        font.weight: Font.Bold
+                        color: "#FFFFFF"
+                        renderType: Text.NativeRendering
+                    }
+                    
+                    Text {
+                        text: "Calculator"
+                        font.pixelSize: 16
+                        font.family: "SF Pro Display"
+                        color: "#8E8E93"
+                        renderType: Text.NativeRendering
+                    }
+                }
+            }
+            
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: "#3A3A3C"
+            }
+            
+            ListView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.topMargin: 12
+                
+                model: ListModel {
+                    ListElement { name: "Полиномы"; icon: "𝑥"; tabIndex: 0 }
+                    ListElement { name: "Цепные дроби"; icon: "∞"; tabIndex: 1 }
+                    ListElement { name: "Полином. ЦД"; icon: "𝑓"; tabIndex: 2 }
+                }
+                
+                delegate: Rectangle {
+                    width: ListView.view.width
+                    height: 56
+                    color: currentTab === tabIndex ? Qt.rgba(0, 122/255, 255/255, 0.2) : "transparent"
+                    
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 20
+                        anchors.rightMargin: 20
+                        spacing: 16
+                        
+                        // Индикатор выбора
+                        Rectangle {
+                            width: 4
+                            height: 32
+                            radius: 2
+                            color: currentTab === tabIndex ? primaryColor : "transparent"
+                        }
+                        
+                        // Иконка
+                        Text {
+                            text: icon
+                            font.pixelSize: 24
+                            font.family: "SF Pro Display"
+                            color: currentTab === tabIndex ? primaryColor : "#8E8E93"
+                            renderType: Text.NativeRendering
+                        }
+                        
+                        // Название
+                        Text {
+                            Layout.fillWidth: true
+                            text: name
+                            font.pixelSize: 17
+                            font.family: "SF Pro Display"
+                            font.weight: currentTab === tabIndex ? Font.Medium : Font.Normal
+                            color: currentTab === tabIndex ? "#FFFFFF" : "#EBEBF5"
+                            renderType: Text.NativeRendering
+                        }
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            currentTab = tabIndex
+                            drawer.close()
+                        }
+                    }
+                }
+            }
+            
+            // Нижняя часть меню
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 60
+                color: "transparent"
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: "Версия 1.0"
+                    font.pixelSize: 12
+                    font.family: "SF Pro Display"
+                    color: "#636366"
+                    renderType: Text.NativeRendering
+                }
+            }
+        }
+    }
+    
+    // Основной контент
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 20
+        spacing: 0
         
-        Display {
-            id: display
-            Layout.fillWidth: true
-            Layout.preferredHeight: 200
-            
-            mainText: currentInput
-            historyText: "Добро пожаловать в калькулятор!\nВведите полиномиальное выражение"
-        }
-        
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 60
-            spacing: 12
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "x"
-                buttonType: "function"
-                fontSize: 24
-                onClicked: handleInput("x")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "xⁿ"
-                buttonType: "function"
-                fontSize: 20
-                onClicked: handleInput("x^")
-            }
-
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "("
-                buttonType: "function"
-                fontSize: 22
-                onClicked: handleInput("(")
-            }
-
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: ")"
-                buttonType: "function"
-                fontSize: 22
-                onClicked: handleInput(")")
-            }
-        }
-        
-        GridLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            columns: 4
-            rowSpacing: 12
-            columnSpacing: 12
-            
-            // Ряд 1: Очистка и операции
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "AC"
-                buttonType: "clear"
-                fontSize: 22
-                onClicked: clearAll()
-            }
-
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "%"
-                buttonType: "operator"
-                fontSize: 24
-                onClicked: handleOperation("%")
-            }
-
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "÷"
-                buttonType: "operator"
-                fontSize: 28
-                onClicked: handleOperation("/")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "⌫"
-                buttonType: "special"
-                fontSize: 24
-                onClicked: backspace()
-            }
-            
-            // Ряд 2: 7, 8, 9, ×
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "7"
-                fontSize: 26
-                onClicked: handleInput("7")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "8"
-                fontSize: 26
-                onClicked: handleInput("8")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "9"
-                fontSize: 26
-                onClicked: handleInput("9")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "×"
-                buttonType: "operator"
-                fontSize: 26
-                onClicked: handleOperation("*")
-            }
-            
-            // Ряд 3: 4, 5, 6, −
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "4"
-                fontSize: 26
-                onClicked: handleInput("4")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "5"
-                fontSize: 26
-                onClicked: handleInput("5")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "6"
-                fontSize: 26
-                onClicked: handleInput("6")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "−"
-                buttonType: "operator"
-                fontSize: 28
-                onClicked: handleOperation("-")
-            }
-            
-            // Ряд 4: 1, 2, 3, +
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "1"
-                fontSize: 26
-                onClicked: handleInput("1")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "2"
-                fontSize: 26
-                onClicked: handleInput("2")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "3"
-                fontSize: 26
-                onClicked: handleInput("3")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "+"
-                buttonType: "operator"
-                fontSize: 28
-                onClicked: handleOperation("+")
-            }
-            
-            // Ряд 5: 0, запятая, =
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.columnSpan: 2
-                buttonText: "0"
-                fontSize: 26
-                onClicked: handleInput("0")
-            }
-
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: ","
-                fontSize: 24
-                textVerticalOffset: -8
-                onClicked: handleInput(",")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "="
-                buttonType: "equals"
-                fontSize: 28
-                onClicked: calculate()
-            }
-        }
-        
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 60
-            spacing: 12
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "GCD"
-                buttonType: "function"
-                fontSize: 18
-                onClicked: handleFunction("gcd")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "DER"
-                buttonType: "function"
-                fontSize: 18
-                onClicked: handleFunction("derivative")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "FAC"
-                buttonType: "function"
-                fontSize: 18
-                onClicked: handleFunction("factorize")
-            }
-            
-            CalculatorButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                buttonText: "NMR"
-                buttonType: "function"
-                fontSize: 18
-                onClicked: handleFunction("nmr")
-            }
-        }
-        
-        // Статус-бар
+        // Верхняя панель с кнопкой меню
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 30
-            color: "transparent"
+            Layout.preferredHeight: 56
+            color: backgroundColor
             
-            Text {
-                id: statusText
-                anchors.centerIn: parent
-                text: "Работает с рациональными полиномами"
-                font.pixelSize: 12
-                font.family: "SF Pro Display"
-                color: "#8E8E93"
-                renderType: Text.NativeRendering
-            }
-        }
-    }
-    
-    function handleInput(input) {
-        if (newInput) {
-            currentInput = input
-            newInput = false
-        } else {
-            if (currentInput === "0" && input !== ",") {
-                currentInput = input
-            } else {
-                currentInput += input
-            }
-        }
-        display.mainText = currentInput
-    }
-    
-    function handleOperation(operation) {
-        currentOperation = operation
-        if (operation === "/") {
-            currentInput += operation
-        } else {
-            currentInput += " " + operation + " "
-        }
-        display.mainText = currentInput
-        newInput = false
-    }
-    
-    function handleFunction(funcName) {
-        var funcDisplay = {
-            "gcd": "GCD(",
-            "derivative": "DER(",
-            "factorize": "FAC(",
-            "nmr": "NMR("
-        }
-        
-        if (currentInput === "0" || newInput) {
-            currentInput = funcDisplay[funcName] || funcName + "("
-        } else {
-            currentInput += funcDisplay[funcName] || funcName + "("
-        }
-        
-        display.mainText = currentInput
-        newInput = false
-        
-        display.historyText += "\nФункция " + funcDisplay[funcName] + " выбрана"
-    }
-    
-    function calculate() {
-        var expression = currentInput
-        
-        try {
-            var result = calculatorBackend.evaluate(expression)
-            
-            if (result.startsWith("Ошибка:")) {
-                display.historyText = expression
-                display.mainText = "Ошибка"
-            } else {
-                display.historyText = expression + " ="
-                display.mainText = result
-                currentInput = result
-            }
-            
-            newInput = true
-            
-            display.triggerUpdate()
-            
-        } catch (error) {
-            display.historyText = expression
-            display.mainText = "Ошибка"
-            newInput = true
-        }
-    }
-    
-    function clearAll() {
-        currentInput = "0"
-        currentOperation = ""
-        display.clear()
-        newInput = true
-    }
-    
-    function backspace() {
-        if (currentInput.length <= 1) {
-            currentInput = "0"
-            display.mainText = currentInput
-            return
-        }
-        
-        var deletedToken = false
-        for (var i = 0; i < groupTokens.length; i++) {
-            var token = groupTokens[i]
-            if (currentInput.endsWith(token)) {
-                currentInput = currentInput.slice(0, -token.length)
-                deletedToken = true
-                break
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                
+                // Кнопка меню (гамбургер)
+                Rectangle {
+                    width: 40
+                    height: 40
+                    radius: 20
+                    color: menuButton.pressed ? surfaceColor : "transparent"
+                    
+                    MouseArea {
+                        id: menuButton
+                        anchors.fill: parent
+                        onClicked: drawer.open()
+                    }
+                    
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 5
+                        
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                width: 20
+                                height: 2
+                                radius: 1
+                                color: "#FFFFFF"
+                            }
+                        }
+                    }
+                }
+                
+                // Заголовок текущей вкладки
+                Text {
+                    Layout.fillWidth: true
+                    text: {
+                        switch(currentTab) {
+                            case 0: return "Полиномы"
+                            case 1: return "Цепные дроби"
+                            case 2: return "Полином. ЦД"
+                            default: return ""
+                        }
+                    }
+                    font.pixelSize: 20
+                    font.family: "SF Pro Display"
+                    font.weight: Font.Medium
+                    color: "#FFFFFF"
+                    horizontalAlignment: Text.AlignHCenter
+                    renderType: Text.NativeRendering
+                }
+                
+                // Пустой элемент для симметрии
+                Item {
+                    width: 40
+                    height: 40
+                }
             }
         }
         
-        if (!deletedToken) {
-            currentInput = currentInput.slice(0, -1)
+        StackLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            currentIndex: currentTab
+            
+            PolynomialTab {
+                id: polynomialTab
+            }
+            
+            ContinuedFractionTab {
+                id: cfTab
+            }
+            
+            PolynomialCFTab {
+                id: pcfTab
+            }
         }
-        
-        if (currentInput.length === 0) {
-            currentInput = "0"
-        }
-        
-        display.mainText = currentInput
     }
     
     Shortcut {
         sequence: "Escape"
-        onActivated: clearAll()
+        onActivated: {
+            if (drawer.opened) {
+                drawer.close()
+            } else if (currentTab === 0) {
+                polynomialTab.clearAll()
+            } else if (currentTab === 1) {
+                cfTab.clearInputs()
+            } else {
+                pcfTab.clearInputs()
+            }
+        }
     }
     
     Shortcut {
         sequence: "Backspace"
-        onActivated: backspace()
+        onActivated: {
+            if (currentTab === 0) {
+                polynomialTab.backspace()
+            }
+        }
     }
     
     Shortcut {
         sequence: "Return"
-        onActivated: calculate()
+        onActivated: {
+            if (currentTab === 0) {
+                polynomialTab.calculate()
+            } else if (currentTab === 1) {
+                cfTab.calculate()
+            } else {
+                pcfTab.calculate()
+            }
+        }
     }
     
     Shortcut {
         sequence: "Enter"
-        onActivated: calculate()
+        onActivated: {
+            if (currentTab === 0) {
+                polynomialTab.calculate()
+            } else if (currentTab === 1) {
+                cfTab.calculate()
+            } else {
+                pcfTab.calculate()
+            }
+        }
     }
-    
+
     Item {
-        focus: true
+        focus: currentTab === 0
         anchors.fill: parent
         
         Keys.onPressed: function(event) {
+            if (currentTab !== 0) return
+            
             var key = event.text
             
             if (key >= '0' && key <= '9') {
-                handleInput(key)
+                polynomialTab.handleInput(key)
                 event.accepted = true
             }
             else if (key === '+') {
-                handleOperation("+")
+                polynomialTab.handleOperation("+")
                 event.accepted = true
             }
             else if (key === '-') {
-                handleOperation("-")
+                polynomialTab.handleOperation("-")
                 event.accepted = true
             }
             else if (key === '*') {
-                handleOperation("*")
+                polynomialTab.handleOperation("*")
                 event.accepted = true
             }
             else if (key === '%') {
-                handleOperation("%")
+                polynomialTab.handleOperation("%")
                 event.accepted = true
             }
             else if (key === '/') {
-                handleOperation("/")
+                polynomialTab.handleOperation("/")
                 event.accepted = true
             }
             else if (key === 'x' || key === 'X') {
-                handleInput("x")
+                polynomialTab.handleInput("x")
                 event.accepted = true
             }
             else if (key === '(' || event.key === Qt.Key_ParenLeft) {
-                handleInput("(")
+                polynomialTab.handleInput("(")
                 event.accepted = true
             }
             else if (key === ')' || event.key === Qt.Key_ParenRight) {
-                handleInput(")")
+                polynomialTab.handleInput(")")
                 event.accepted = true
             }
             else if (key === '^') {
-                handleInput("^")
+                polynomialTab.handleInput("^")
                 event.accepted = true
             }
             else if (key === ',' || event.key === Qt.Key_Comma) {
-                handleInput(",")
+                polynomialTab.handleInput(",")
                 event.accepted = true
             }
         }
     }
 }
-

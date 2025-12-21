@@ -12,7 +12,7 @@ endif()
 
 set(SRC_DIR src)
 
-find_package(Qt6 COMPONENTS Core Quick Qml QUIET)
+find_package(Qt6 COMPONENTS Core Quick Qml QuickControls2 QUIET)
 
 if(Qt6_FOUND)
     message(STATUS "собираем GUI версию")
@@ -31,6 +31,7 @@ if(Qt6_FOUND)
         ${SRC_DIR}/modules/numbers/integer
         ${SRC_DIR}/modules/numbers/rational
         ${SRC_DIR}/modules/polynomial
+        ${SRC_DIR}/modules/continued_fraction
         ${SRC_DIR}/api
         ${SRC_DIR}/api/calculator
         ${SRC_DIR}/ui
@@ -42,6 +43,7 @@ if(Qt6_FOUND)
         "${SRC_DIR}/modules/numbers/integer/*.cpp"
         "${SRC_DIR}/modules/numbers/rational/*.cpp"
         "${SRC_DIR}/modules/polynomial/*.cpp"
+        "${SRC_DIR}/modules/continued_fraction/*.cpp"
         "${SRC_DIR}/api/calculator/*.cpp"
         "${SRC_DIR}/ui/*.cpp"
     )
@@ -49,7 +51,7 @@ if(Qt6_FOUND)
     add_executable(app ${SOURCES} ${QML_RESOURCES})
     target_compile_features(app PRIVATE cxx_std_20)
     target_compile_definitions(app PRIVATE USE_QT_GUI)
-    target_link_libraries(app PRIVATE Qt6::Core Qt6::Quick Qt6::Qml)
+    target_link_libraries(app PRIVATE Qt6::Core Qt6::Quick Qt6::Qml Qt6::QuickControls2)
     
 else()
     message(STATUS "Qt6 не найден - собираем консольную версию")
@@ -62,6 +64,7 @@ else()
         ${SRC_DIR}/modules/numbers/integer
         ${SRC_DIR}/modules/numbers/rational
         ${SRC_DIR}/modules/polynomial
+        ${SRC_DIR}/modules/continued_fraction
         ${SRC_DIR}/api
         ${SRC_DIR}/api/calculator
         ${SRC_DIR}/ui
@@ -73,6 +76,7 @@ else()
         "${SRC_DIR}/modules/numbers/integer/*.cpp"
         "${SRC_DIR}/modules/numbers/rational/*.cpp"
         "${SRC_DIR}/modules/polynomial/*.cpp"
+        "${SRC_DIR}/modules/continued_fraction/*.cpp"
         "${SRC_DIR}/api/calculator/*.cpp"
     )
     

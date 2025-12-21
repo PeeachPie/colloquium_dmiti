@@ -5,6 +5,9 @@
         <file>components/Display.qml</file>
         <file>components/MathDisplay.qml</file>
         <file>components/Theme.qml</file>
+        <file>components/PolynomialTab.qml</file>
+        <file>components/ContinuedFractionTab.qml</file>
+        <file>components/PolynomialCFTab.qml</file>
         <file>qmldir</file>
     </qresource>
 </RCC>
