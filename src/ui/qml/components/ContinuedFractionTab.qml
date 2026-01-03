@@ -12,7 +12,9 @@ Item {
     property string denominatorInput: ""
     property string cfInput: ""
     property string sqrtInput: ""
-    property int currentMode: 0  // 0: Q->CF, 1: CF->Q, 2: sqrt->CF, 3: конвергенты
+    property string maxDenInput: ""
+    property int currentMode: 0  // 0: Q->CF, 1: CF->Q, 2: sqrt->CF, 3: CF->sqrt, 4: конвергенты, 5: приближение, 6: 1/x
+    property int periodStart: -1  // Начало периода для режима CF->sqrt
     
     readonly property color backgroundColor: "#000000"
     readonly property color surfaceColor: "#1C1C1E"
@@ -105,14 +107,14 @@ Item {
                 }
             }
         }
-        
+
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 44
+            Layout.preferredHeight: 40
             spacing: 8
             
             Repeater {
-                model: ["Q→CF", "CF→Q", "√D→CF", "Конвергенты"]
+                model: ["Q→CF", "CF→Q", "√D→CF", "CF→√D"]
                 
                 Rectangle {
                     Layout.fillWidth: true
@@ -123,7 +125,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: modelData
-                        font.pixelSize: 14
+                        font.pixelSize: 13
                         font.family: "SF Pro Display"
                         font.weight: currentMode === index ? Font.Medium : Font.Normal
                         color: "#FFFFFF"
@@ -134,6 +136,41 @@ Item {
                         anchors.fill: parent
                         onClicked: {
                             currentMode = index
+                            clearInputs()
+                        }
+                    }
+                }
+            }
+        }
+        
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
+            spacing: 8
+            
+            Repeater {
+                model: ["Конвергенты", "Приближение", "1/x"]
+                
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: currentMode === (index + 4) ? primaryColor : surfaceColor
+                    radius: 10
+                    
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData
+                        font.pixelSize: 13
+                        font.family: "SF Pro Display"
+                        font.weight: currentMode === (index + 4) ? Font.Medium : Font.Normal
+                        color: "#FFFFFF"
+                        renderType: Text.NativeRendering
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            currentMode = index + 4
                             clearInputs()
                         }
                     }
@@ -204,10 +241,15 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 12
-            visible: currentMode === 1 || currentMode === 3
+            visible: currentMode === 1 || currentMode === 4 || currentMode === 6
             
             Text {
-                text: currentMode === 1 ? "Цепная дробь [a₀; a₁, a₂, ...]" : "Цепная дробь для конвергентов"
+                text: {
+                    if (currentMode === 1) return "Цепная дробь [a₀; a₁, a₂, ...]"
+                    if (currentMode === 4) return "Цепная дробь для конвергентов"
+                    if (currentMode === 6) return "Цепная дробь для инвертирования"
+                    return ""
+                }
                 font.pixelSize: 14
                 color: "#8E8E93"
                 font.family: "SF Pro Display"
@@ -229,6 +271,119 @@ Item {
                     radius: 10
                 }
                 onTextChanged: cfInput = text
+            }
+        }
+        
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 12
+            visible: currentMode === 3
+            
+            Text {
+                text: "Периодическая цепная дробь [a₀; a₁, ..., (b₁, b₂, ...)]"
+                font.pixelSize: 14
+                color: "#8E8E93"
+                font.family: "SF Pro Display"
+            }
+            
+            TextField {
+                id: cfFieldPeriodic
+                Layout.fillWidth: true
+                placeholderText: "Например: 1, 2 (для [1; (2)...])"
+                placeholderTextColor: "#636366"
+                text: cfInput
+                color: "#FFFFFF"
+                font.pixelSize: 20
+                font.family: "SF Pro Display"
+                horizontalAlignment: Text.AlignCenter
+                validator: RegularExpressionValidator { regularExpression: /^[-0-9,;\s]*$/ }
+                background: Rectangle {
+                    color: surfaceColor
+                    radius: 10
+                }
+                onTextChanged: cfInput = text
+            }
+            
+            Text {
+                text: "Индекс начала периода (0 = чисто периодическая)"
+                font.pixelSize: 14
+                color: "#8E8E93"
+                font.family: "SF Pro Display"
+            }
+            
+            TextField {
+                id: periodStartField
+                Layout.fillWidth: true
+                placeholderText: "Например: 1 (период с a₁)"
+                placeholderTextColor: "#636366"
+                text: periodStart >= 0 ? periodStart.toString() : ""
+                color: "#FFFFFF"
+                font.pixelSize: 20
+                font.family: "SF Pro Display"
+                horizontalAlignment: Text.AlignCenter
+                validator: RegularExpressionValidator { regularExpression: /^[0-9]*$/ }
+                background: Rectangle {
+                    color: surfaceColor
+                    radius: 10
+                }
+                onTextChanged: periodStart = text === "" ? -1 : parseInt(text)
+            }
+        }
+        
+        // Поля для режима приближения
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 12
+            visible: currentMode === 5
+            
+            Text {
+                text: "Цепная дробь [a₀; a₁, a₂, ...]"
+                font.pixelSize: 14
+                color: "#8E8E93"
+                font.family: "SF Pro Display"
+            }
+            
+            TextField {
+                id: cfFieldApprox
+                Layout.fillWidth: true
+                placeholderText: "Например: 3, 7, 15, 1, 292"
+                placeholderTextColor: "#636366"
+                text: cfInput
+                color: "#FFFFFF"
+                font.pixelSize: 20
+                font.family: "SF Pro Display"
+                horizontalAlignment: Text.AlignCenter
+                validator: RegularExpressionValidator { regularExpression: /^[-0-9,;\s]*$/ }
+                background: Rectangle {
+                    color: surfaceColor
+                    radius: 10
+                }
+                onTextChanged: cfInput = text
+            }
+            
+            Text {
+                text: "Максимальный знаменатель"
+                font.pixelSize: 14
+                color: "#8E8E93"
+                font.family: "SF Pro Display"
+            }
+            
+            TextField {
+                id: maxDenField
+                Layout.fillWidth: true
+                placeholderText: "Например: 100"
+                placeholderTextColor: "#636366"
+                text: maxDenInput
+                color: "#FFFFFF"
+                font.pixelSize: 20
+                font.family: "SF Pro Display"
+                horizontalAlignment: Text.AlignCenter
+                validator: RegularExpressionValidator { regularExpression: /^[0-9]*$/ }
+                background: Rectangle {
+                    color: surfaceColor
+                    radius: 10
+                }
+                onTextChanged: maxDenInput = text
             }
         }
         
@@ -346,7 +501,10 @@ Item {
             case 0: return "Преобразование рационального числа в цепную дробь"
             case 1: return "Преобразование цепной дроби в рациональное число"
             case 2: return "Цепная дробь для квадратного корня"
-            case 3: return "Вычисление подходящих дробей (конвергентов)"
+            case 3: return "Периодическая ЦД в квадратичную иррациональность"
+            case 4: return "Вычисление подходящих дробей (конвергентов)"
+            case 5: return "Приближение с ограничением знаменателя"
+            case 6: return "Инвертирование цепной дроби (1/x)"
             default: return ""
         }
     }
@@ -356,10 +514,16 @@ Item {
         denominatorInput = ""
         cfInput = ""
         sqrtInput = ""
+        maxDenInput = ""
+        periodStart = -1
         numField.text = ""
         denField.text = ""
         cfField.text = ""
         sqrtField.text = ""
+        maxDenField.text = ""
+        cfFieldApprox.text = ""
+        cfFieldPeriodic.text = ""
+        periodStartField.text = ""
         
         // Сброс отображения
         resultLabel.text = "Введите данные"
@@ -425,7 +589,20 @@ Item {
                     historyLabel.text = "√" + sqrtInput + " ="
                     break
                     
-                case 3: // Конвергенты
+                case 3: // CF -> sqrt (периодическая ЦД в квадратичную иррациональность)
+                    if (cfInput === "") {
+                        showError("Введите коэффициенты")
+                        return
+                    }
+                    if (periodStart < 0) {
+                        showError("Укажите начало периода")
+                        return
+                    }
+                    result = calculatorBackend.cfToQuad(cfInput, periodStart)
+                    historyLabel.text = "[" + cfInput + "] ="
+                    break
+                    
+                case 4: // Конвергенты
                     if (cfInput === "") {
                         showError("Введите коэффициенты")
                         return
@@ -433,11 +610,29 @@ Item {
                     result = calculatorBackend.cfConvergents(cfInput)
                     historyLabel.text = "Конвергенты [" + cfInput + "]:"
                     break
+                    
+                case 5: // Приближение
+                    if (cfInput === "" || maxDenInput === "") {
+                        showError("Введите ЦД и макс. знаменатель")
+                        return
+                    }
+                    result = calculatorBackend.cfApprox(cfInput, maxDenInput)
+                    historyLabel.text = "Прибл. [" + cfInput + "], q≤" + maxDenInput + " ="
+                    break
+                    
+                case 6: // 1/x
+                    if (cfInput === "") {
+                        showError("Введите коэффициенты")
+                        return
+                    }
+                    result = calculatorBackend.cfInvert(cfInput)
+                    historyLabel.text = "1/[" + cfInput + "] ="
+                    break
             }
             
             if (result.startsWith("Ошибка")) {
                 showError("Ошибка")
-            } else if (currentMode === 3) {
+            } else if (currentMode === 4) {
                 // Конвергенты - многострочный вывод
                 var lines = result.split("\n")
                 showMultiLineResult(lines)

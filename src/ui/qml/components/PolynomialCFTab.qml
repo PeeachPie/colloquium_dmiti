@@ -11,7 +11,7 @@ Item {
     property string numeratorPoly: ""
     property string denominatorPoly: ""
     property string pcfInput: ""
-    property int currentMode: 0  // 0: P/Q->PCF, 1: PCF->P/Q, 2: конвергенты
+    property int currentMode: 0  // 0: P/Q->PCF, 1: PCF->P/Q, 2: конвергенты, 3: 1/x
 
     readonly property color backgroundColor: "#000000"
     readonly property color surfaceColor: "#1C1C1E"
@@ -113,7 +113,7 @@ Item {
             spacing: 8
 
             Repeater {
-                model: ["P/Q→PCF", "PCF→P/Q", "Конвергенты"]
+                model: ["P/Q→PCF", "PCF→P/Q", "Конверг.", "1/x"]
 
                 Rectangle {
                     Layout.fillWidth: true
@@ -201,10 +201,11 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 12
-            visible: currentMode === 1 || currentMode === 2
+            visible: currentMode === 1 || currentMode === 2 || currentMode === 3
 
             Text {
-                text: currentMode === 1 ? "Цепная дробь [P₀; P₁, P₂, ...]" : "Цепная дробь для конвергентов"
+                text: currentMode === 1 ? "Цепная дробь [P₀; P₁, P₂, ...]" : 
+                      currentMode === 2 ? "Цепная дробь для конвергентов" : "Цепная дробь для инвертирования"
                 font.pixelSize: 14
                 color: "#8E8E93"
                 font.family: "SF Pro Display"
@@ -309,6 +310,7 @@ Item {
             case 0: return "Преобразование P(x)/Q(x) в цепную дробь"
             case 1: return "Преобразование цепной дроби в P(x)/Q(x)"
             case 2: return "Вычисление конвергентов"
+            case 3: return "Инвертирование цепной дроби (1/x)"
             default: return ""
         }
     }
@@ -384,6 +386,15 @@ Item {
                     result = calculatorBackend.pcfConvergents(pcfInput)
                     historyLabel.text = "Конвергенты:"
                     break
+
+                case 3: // 1/x (инвертирование)
+                    if (pcfInput === "") {
+                        showError("Введите многочлены")
+                        return
+                    }
+                    result = calculatorBackend.pcfInvert(pcfInput)
+                    historyLabel.text = "1 / [" + pcfInput + "] ="
+                    break
             }
 
             if (result.startsWith("Ошибка")) {
@@ -392,6 +403,9 @@ Item {
                 // PCF->P/Q и конвергенты - многострочный вывод
                 var lines = result.split("\n")
                 showMultiLineResult(lines)
+            } else if (currentMode === 3) {
+                // 1/x - однострочный вывод
+                showSingleResult(result)
             } else {
                 showSingleResult(result)
             }
