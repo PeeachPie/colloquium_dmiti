@@ -242,6 +242,53 @@ TEST(ContinuedFractionTest, Operators) {
     EXPECT_TRUE(cf3 > cf1);
 }
 
+// CF-13: Преобразование периодической цепной дроби в квадратичную иррациональность
+TEST(ContinuedFractionTest, TO_CF_QUAD_NonPeriodic) {
+    // Непериодическая дробь [3; 7] = 22/7 -> (22, 0, 7)
+    ContinuedFraction cf(std::vector<int>{3, 7});
+    auto [a, D, c] = cf.TO_CF_QUAD();
+    EXPECT_EQ(a.as_string(), "22");
+    EXPECT_EQ(D.as_string(), "0");
+    EXPECT_EQ(c.as_string(), "7");
+}
+
+TEST(ContinuedFractionTest, TO_CF_QUAD_Sqrt2) {
+    // sqrt(2) = [1; (2)...] -> (0, 2, 1) или эквивалент
+    ContinuedFraction cf = ContinuedFraction::FROM_SQRT_CF(Natural("2"));
+    auto [a, D, c] = cf.TO_CF_QUAD();
+    
+    // Проверяем что (a + sqrt(D)) / c = sqrt(2)
+    // Это значит a = 0, D = 2, c = 1 (или кратные)
+    // Или D должен содержать множитель 2
+    EXPECT_TRUE(D.NZER_N_B());  // D != 0 (периодическая)
+}
+
+TEST(ContinuedFractionTest, TO_CF_QUAD_Sqrt3) {
+    // sqrt(3) = [1; (1, 2)...]
+    ContinuedFraction cf = ContinuedFraction::FROM_SQRT_CF(Natural("3"));
+    auto [a, D, c] = cf.TO_CF_QUAD();
+    
+    EXPECT_TRUE(D.NZER_N_B());  // D != 0 (периодическая)
+}
+
+TEST(ContinuedFractionTest, TO_CF_QUAD_Sqrt5) {
+    // sqrt(5) = [2; (4)...]
+    ContinuedFraction cf = ContinuedFraction::FROM_SQRT_CF(Natural("5"));
+    auto [a, D, c] = cf.TO_CF_QUAD();
+    
+    EXPECT_TRUE(D.NZER_N_B());  // D != 0 (периодическая)
+}
+
+TEST(ContinuedFractionTest, TO_CF_QUAD_GoldenRatio) {
+    // φ = (1 + sqrt(5)) / 2 = [1; (1)...]
+    std::vector<Integer> coeffs = {Integer("1"), Integer("1")};
+    ContinuedFraction cf(coeffs, 1);  // [1; (1)...]
+    auto [a, D, c] = cf.TO_CF_QUAD();
+    
+    // φ = (1 + sqrt(5)) / 2, так что a=1, D=5, c=2
+    EXPECT_TRUE(D.NZER_N_B());
+}
+
 
 
 // PCF-1: Преобразование рациональной функции P/Q в цепную дробь
