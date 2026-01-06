@@ -229,10 +229,11 @@ int ContinuedFraction::COM_CF_D(const ContinuedFraction& other) const {
         if (cmp != 0) {
             // Для чётных позиций: больший коэффициент = большая дробь
             // Для нечётных позиций: больший коэффициент = меньшая дробь
+            // COM_ZZ_D возвращает: 1 если this > other, -1 если this < other
             if (i % 2 == 0) {
-                return (cmp == 2) ? 1 : -1;
+                return cmp;  // на чётной позиции порядок прямой
             } else {
-                return (cmp == 2) ? -1 : 1;
+                return -cmp;  // на нечётной позиции порядок обратный
             }
         }
     }
@@ -241,10 +242,16 @@ int ContinuedFraction::COM_CF_D(const ContinuedFraction& other) const {
         return 0;
     }
     
+    // Все общие элементы равны, но длины разные
+    // Более короткая дробь эквивалентна дроби с "бесконечностью" на позиции min_len
+    // На позиции min_len (чётная): больший элемент = большая дробь, ∞ > любого числа => короткая > длинной
+    // На позиции min_len (нечётная): больший элемент = меньшая дробь, ∞ > любого числа => короткая < длинной
     if (coefficients_.size() > other.coefficients_.size()) {
-        return (min_len % 2 == 0) ? 1 : -1;
-    } else {
+        // this длиннее, other короче (other имеет "∞" на позиции min_len)
         return (min_len % 2 == 0) ? -1 : 1;
+    } else {
+        // other длиннее, this короче (this имеет "∞" на позиции min_len)
+        return (min_len % 2 == 0) ? 1 : -1;
     }
 }
 
