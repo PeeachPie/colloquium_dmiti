@@ -222,10 +222,22 @@ Rational ContinuedFraction::APPROX_CF_Q(const Natural& max_denominator) const {
 
 // CF-6 | Сравнение двух цепных дробей
 int ContinuedFraction::COM_CF_D(const ContinuedFraction& other) const {
-    size_t min_len = std::min(coefficients_.size(), other.coefficients_.size());
+    // нормализация: убираем завершающие 1 ([..., a, 1] -> [..., a+1])
+    auto normalize = [](std::vector<Integer> coeffs) {
+        while (coeffs.size() > 1 && coeffs.back().COM_ZZ_D(Integer("1")) == 0) {
+            coeffs.pop_back();
+            coeffs.back() = coeffs.back().ADD_ZZ_Z(Integer("1"));
+        }
+        return coeffs;
+    };
+    
+    std::vector<Integer> a = (period_start_ < 0) ? normalize(coefficients_) : coefficients_;
+    std::vector<Integer> b = (other.period_start_ < 0) ? normalize(other.coefficients_) : other.coefficients_;
+    
+    size_t min_len = std::min(a.size(), b.size());
     
     for (size_t i = 0; i < min_len; ++i) {
-        int cmp = coefficients_[i].COM_ZZ_D(other.coefficients_[i]);
+        int cmp = a[i].COM_ZZ_D(b[i]);
         if (cmp != 0) {
             // Для чётных позиций: больший коэффициент = большая дробь
             // Для нечётных позиций: больший коэффициент = меньшая дробь
@@ -238,16 +250,18 @@ int ContinuedFraction::COM_CF_D(const ContinuedFraction& other) const {
         }
     }
     
-    if (coefficients_.size() == other.coefficients_.size()) {
+    if (a.size() == b.size()) {
+        // Для периодических дробей также сравниваем начало периода
+        if (period_start_ >= 0 && other.period_start_ >= 0) {
+            if (period_start_ != other.period_start_) {
+                return (period_start_ < other.period_start_) ? -1 : 1;
+            }
+        }
         return 0;
     }
     
-    // Все общие элементы равны, но длины разные
     // Более короткая дробь эквивалентна дроби с "бесконечностью" на позиции min_len
-    // На позиции min_len (чётная): больший элемент = большая дробь, ∞ > любого числа => короткая > длинной
-    // На позиции min_len (нечётная): больший элемент = меньшая дробь, ∞ > любого числа => короткая < длинной
-    if (coefficients_.size() > other.coefficients_.size()) {
-        // this длиннее, other короче (other имеет "∞" на позиции min_len)
+    if (a.size() > b.size()) {
         return (min_len % 2 == 0) ? -1 : 1;
     } else {
         // other длиннее, this короче (this имеет "∞" на позиции min_len)
