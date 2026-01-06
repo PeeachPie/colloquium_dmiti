@@ -14,6 +14,7 @@ Item {
     property int minFontSize: 12
     
     property int effectiveFontSize: baseFontSize
+    property bool needsScroll: false
     
     TextMetrics {
         id: textMetrics
@@ -31,6 +32,7 @@ Item {
     function recalculateFontSize() {
         if (width <= 0 || expression.length === 0) {
             effectiveFontSize = baseFontSize
+            needsScroll = false
             return
         }
         
@@ -51,6 +53,9 @@ Item {
         }
         
         effectiveFontSize = Math.max(size, minFontSize)
+        
+        var finalEstimatedWidth = textLength * effectiveFontSize * 0.55
+        needsScroll = (effectiveFontSize <= minFontSize && finalEstimatedWidth > availableWidth)
     }
 
     function parseExpression(expr) {
@@ -157,31 +162,48 @@ Item {
         return tokens
     }
     
-    Flow {
-        id: mathFlow
-        anchors.centerIn: parent
-        spacing: 4
-        layoutDirection: Qt.LeftToRight
+    ScrollView {
+        id: scrollView
+        anchors.fill: parent
+        clip: true
         
-        Repeater {
-            model: parseExpression(root.expression)
+        ScrollBar.horizontal.policy: needsScroll ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+        ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+        
+        contentWidth: mathFlow.width
+        contentHeight: mathFlow.height
+        
+        Item {
+            width: Math.max(mathFlow.width, scrollView.width)
+            height: scrollView.height
             
-            delegate: Loader {
-                sourceComponent: {
-                    if (modelData.type === "fraction") {
-                        return fractionComponent
-                    } else if (modelData.type === "power") {
-                        return powerComponent
-                    } else if (modelData.type === "function") {
-                        return functionComponent
-                    } else if (modelData.type === "functionClose") {
-                        return functionCloseComponent
-                    } else {
-                        return textComponent
+            Flow {
+                id: mathFlow
+                anchors.centerIn: parent
+                spacing: 4
+                layoutDirection: Qt.LeftToRight
+                
+                Repeater {
+                    model: parseExpression(root.expression)
+                    
+                    delegate: Loader {
+                        sourceComponent: {
+                            if (modelData.type === "fraction") {
+                                return fractionComponent
+                            } else if (modelData.type === "power") {
+                                return powerComponent
+                            } else if (modelData.type === "function") {
+                                return functionComponent
+                            } else if (modelData.type === "functionClose") {
+                                return functionCloseComponent
+                            } else {
+                                return textComponent
+                            }
+                        }
+                        
+                        property var tokenData: modelData
                     }
                 }
-                
-                property var tokenData: modelData
             }
         }
     }
