@@ -12,6 +12,7 @@ Item {
     property string denominatorPoly: ""
     property string pcfInput: ""
     property int currentMode: 0  // 0: P/Q->PCF, 1: PCF->P/Q, 2: конвергенты, 3: 1/x
+    property string currentResult: ""
 
     readonly property color backgroundColor: "#000000"
     readonly property color surfaceColor: "#1C1C1E"
@@ -34,15 +35,26 @@ Item {
                 anchors.margins: 16
                 spacing: 8
 
-                Text {
-                    id: historyLabel
+                RowLayout {
                     Layout.fillWidth: true
-                    text: "Полиномиальные цепные дроби"
-                    font.pixelSize: 14
-                    font.family: "SF Pro Display"
-                    color: "#8E8E93"
-                    horizontalAlignment: Text.AlignRight
-                    renderType: Text.NativeRendering
+                    spacing: 8
+                    
+                    Text {
+                        id: historyLabel
+                        Layout.fillWidth: true
+                        text: "Полиномиальные цепные дроби"
+                        font.pixelSize: 14
+                        font.family: "SF Pro Display"
+                        color: "#8E8E93"
+                        horizontalAlignment: Text.AlignLeft
+                        renderType: Text.NativeRendering
+                    }
+                    
+                    CopyButton {
+                        id: copyButton
+                        visible: currentResult !== ""
+                        textToCopy: currentResult
+                    }
                 }
 
                 // Для однострочного результата - MathDisplay
@@ -330,6 +342,7 @@ Item {
         mathResultDisplay.visible = false
         multiLineResult.visible = false
         resultRepeater.model = []
+        currentResult = ""
         
         historyLabel.text = "Полиномиальные цепные дроби"
     }
@@ -339,6 +352,7 @@ Item {
         multiLineResult.visible = false
         mathResultDisplay.expression = text
         mathResultDisplay.visible = true
+        currentResult = text
     }
     
     function showMultiLineResult(lines) {
@@ -346,6 +360,7 @@ Item {
         mathResultDisplay.visible = false
         resultRepeater.model = lines
         multiLineResult.visible = true
+        currentResult = lines.join("\n")
     }
     
     function showError(text) {
@@ -353,6 +368,7 @@ Item {
         multiLineResult.visible = false
         resultLabel.text = text
         resultLabel.visible = true
+        currentResult = ""
     }
 
     function calculate() {

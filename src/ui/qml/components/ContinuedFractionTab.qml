@@ -15,6 +15,7 @@ Item {
     property string maxDenInput: ""
     property int currentMode: 0  // 0: Q->CF, 1: CF->Q, 2: sqrt->CF, 3: CF->sqrt, 4: конвергенты, 5: приближение, 6: 1/x
     property int periodStart: -1  // Начало периода для режима CF->sqrt
+    property string currentResult: ""
     
     readonly property color backgroundColor: "#000000"
     readonly property color surfaceColor: "#1C1C1E"
@@ -36,15 +37,26 @@ Item {
                 anchors.margins: 16
                 spacing: 8
                 
-                Text {
-                    id: historyLabel
+                RowLayout {
                     Layout.fillWidth: true
-                    text: "Цепные дроби"
-                    font.pixelSize: 14
-                    font.family: "SF Pro Display"
-                    color: "#8E8E93"
-                    horizontalAlignment: Text.AlignRight
-                    renderType: Text.NativeRendering
+                    spacing: 8
+                    
+                    Text {
+                        id: historyLabel
+                        Layout.fillWidth: true
+                        text: "Цепные дроби"
+                        font.pixelSize: 14
+                        font.family: "SF Pro Display"
+                        color: "#8E8E93"
+                        horizontalAlignment: Text.AlignLeft
+                        renderType: Text.NativeRendering
+                    }
+                    
+                    CopyButton {
+                        id: copyButton
+                        visible: currentResult !== ""
+                        textToCopy: currentResult
+                    }
                 }
                 
                 // Для однострочного результата - MathDisplay
@@ -532,6 +544,7 @@ Item {
         mathResultDisplay.visible = false
         multiLineResult.visible = false
         resultRepeater.model = []
+        currentResult = ""
         
         historyLabel.text = "Цепные дроби"
     }
@@ -541,6 +554,7 @@ Item {
         multiLineResult.visible = false
         mathResultDisplay.expression = text
         mathResultDisplay.visible = true
+        currentResult = text
     }
     
     function showMultiLineResult(lines) {
@@ -548,6 +562,7 @@ Item {
         mathResultDisplay.visible = false
         resultRepeater.model = lines
         multiLineResult.visible = true
+        currentResult = lines.join("\n")
     }
     
     function showError(text) {
@@ -555,6 +570,7 @@ Item {
         multiLineResult.visible = false
         resultLabel.text = text
         resultLabel.visible = true
+        currentResult = ""
     }
     
     function calculate() {
