@@ -146,6 +146,95 @@ QString CalculatorBackend::cfConvergents(const QString& coefficients) {
     }
 }
 
+QString CalculatorBackend::cfApprox(const QString& coefficients, const QString& maxDenominator) {
+    try {
+        std::vector<Integer> coefs = parseCoefficients(coefficients);
+        
+        if (coefs.empty()) {
+            return "Ошибка: введите коэффициенты";
+        }
+        
+        QString maxDenStr = maxDenominator.trimmed();
+        if (maxDenStr.isEmpty() || maxDenStr == "0") {
+            return "Ошибка: введите максимальный знаменатель";
+        }
+        
+        ContinuedFraction cf(coefs);
+        Natural maxDen(maxDenStr.toStdString());
+        Rational approx = cf.APPROX_CF_Q(maxDen);
+        
+        return QString::fromStdString(approx.as_string());
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+QString CalculatorBackend::cfInvert(const QString& coefficients) {
+    try {
+        std::vector<Integer> coefs = parseCoefficients(coefficients);
+        
+        if (coefs.empty()) {
+            return "Ошибка: введите коэффициенты";
+        }
+        
+        ContinuedFraction cf(coefs);
+        ContinuedFraction inverted = cf.INV_CF_CF();
+        
+        return QString::fromStdString(inverted.as_string());
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+QString CalculatorBackend::cfToQuad(const QString& coefficients, int periodStart) {
+    try {
+        std::vector<Integer> coefs = parseCoefficients(coefficients);
+        
+        if (coefs.empty()) {
+            return "Ошибка: введите коэффициенты";
+        }
+        
+        ContinuedFraction cf(coefs, periodStart);
+        auto [a, D, c] = cf.TO_CF_QUAD();
+        
+        QString result;
+        if (D.COM_NN_D(Natural("0")) == 0) {
+            if (c.COM_ZZ_D(Integer("1")) == 0) {
+                result = QString::fromStdString(a.as_string());
+            } else {
+                result = QString("%1/%2").arg(QString::fromStdString(a.as_string()))
+                                         .arg(QString::fromStdString(c.as_string()));
+            }
+        } else {
+            // Квадратичная иррациональность: (a + √D) / c
+            QString aStr = QString::fromStdString(a.as_string());
+            QString dStr = QString::fromStdString(D.as_string());
+            QString cStr = QString::fromStdString(c.as_string());
+            
+            if (c.COM_ZZ_D(Integer("1")) == 0) {
+                if (a.SGN_Z_D() == 0) {
+                    result = QString("√%1").arg(dStr);
+                } else {
+                    result = QString("%1 + √%2").arg(aStr).arg(dStr);
+                }
+            } else {
+                if (a.SGN_Z_D() == 0) {
+                    result = QString("√%1 / %2").arg(dStr).arg(cStr);
+                } else {
+                    result = QString("(%1 + √%2) / %3").arg(aStr).arg(dStr).arg(cStr);
+                }
+            }
+        }
+        
+        return result;
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}
+
 QString CalculatorBackend::formatResult(const QString& apiResult) {
     QString result = apiResult;
     
@@ -486,3 +575,43 @@ QString CalculatorBackend::pcfConvergents(const QString& polynomials) {
     }
 }
 
+
+QString CalculatorBackend::pcfInvert(const QString& polynomials) {
+    try {
+        std::vector<Polynomial> polys = parsePolynomials(polynomials);
+        
+        if (polys.empty()) {
+            return "Ошибка: введите многочлены";
+        }
+        
+        PolynomialContinuedFraction pcf(polys);
+        PolynomialContinuedFraction inverted = pcf.INV_PCF_PCF();
+        
+        // Форматируем результат
+        QString raw = QString::fromStdString(inverted.as_string());
+        raw.replace("[", "");
+        raw.replace("]", "");
+        raw.replace("(", "");
+        raw.replace(")", "");
+        QStringList parts = raw.split(QRegularExpression("[;,]"));
+        QStringList formatted;
+        for (const QString& part : parts) {
+            formatted << formatPolynomialPretty(part.trimmed());
+        }
+        
+        if (formatted.isEmpty()) {
+            return "[]";
+        }
+        
+        QString result = "[" + formatted[0];
+        for (int i = 1; i < formatted.size(); ++i) {
+            result += (i == 1 ? "; " : ", ") + formatted[i];
+        }
+        result += "]";
+        
+        return result;
+        
+    } catch (const std::exception& e) {
+        return QString("Ошибка: %1").arg(QString::fromLocal8Bit(e.what()));
+    }
+}

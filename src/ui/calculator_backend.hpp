@@ -19,10 +19,14 @@ public:
     Q_INVOKABLE QString cfToRational(const QString& coefficients);
     Q_INVOKABLE QString sqrtToCF(const QString& d);
     Q_INVOKABLE QString cfConvergents(const QString& coefficients);
+    Q_INVOKABLE QString cfApprox(const QString& coefficients, const QString& maxDenominator);
+    Q_INVOKABLE QString cfInvert(const QString& coefficients);
+    Q_INVOKABLE QString cfToQuad(const QString& coefficients, int periodStart);
 
     Q_INVOKABLE QString polyToPCF(const QString& numerator, const QString& denominator);
     Q_INVOKABLE QString pcfToPoly(const QString& polynomials);
     Q_INVOKABLE QString pcfConvergents(const QString& polynomials);
+    Q_INVOKABLE QString pcfInvert(const QString& polynomials);
 
 private:
     Calculator calculator_;

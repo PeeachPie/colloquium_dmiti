@@ -146,7 +146,7 @@ ApplicationWindow {
                 
                 Text {
                     anchors.centerIn: parent
-                    text: "Версия 1.0"
+                    text: "Версия 1.2"
                     font.pixelSize: 12
                     font.family: "SF Pro Display"
                     color: "#636366"

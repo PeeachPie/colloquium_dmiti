@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <tuple>
 
 /*
  *   Класс цепных дробей для рациональных чисел
@@ -72,6 +73,11 @@ public:
     
     // CF-12 | Получение непериодической части
     [[nodiscard]] std::vector<Integer> GET_APERIODIC_CF() const;
+    
+    // CF-13 | Преобразование периодической цепной дроби в квадратичную иррациональность
+    // Возвращает (a, D, c) такие что дробь = (a + sqrt(D)) / c
+    // Если дробь не периодическая, возвращает рациональное число как (p, 0, q) где p/q - значение
+    [[nodiscard]] std::tuple<Integer, Natural, Integer> TO_CF_QUAD() const;
 
     // Геттеры
     [[nodiscard]] const std::vector<Integer>& coefficients() const { return coefficients_; }

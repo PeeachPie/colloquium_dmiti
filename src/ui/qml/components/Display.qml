@@ -21,34 +21,43 @@ Rectangle {
         anchors.margins: 20
         spacing: 8
         
-        ScrollView {
-            id: historyView
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: showHistory ? 80 : 0
+            Layout.preferredHeight: showHistory ? 60 : 0
+            spacing: 8
             visible: showHistory && historyText !== ""
-            clip: true
             
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-            ScrollBar.vertical.policy: ScrollBar.AsNeeded
-            
-            background: Rectangle {
-                color: "transparent"
+            ScrollView {
+                id: historyView
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                
+                background: Rectangle {
+                    color: "transparent"
+                }
+                
+                Text {
+                    id: history
+                    width: historyView.width
+                    text: historyText
+                    font.pixelSize: 16
+                    font.family: "SF Mono"
+                    color: "#8E8E93"
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignLeft
+                    renderType: Text.NativeRendering
+                }
             }
             
-            Text {
-                id: history
-                width: historyView.width
-                text: historyText
-                font.pixelSize: 16
-                font.family: "SF Mono"
-                color: "#8E8E93"
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignRight
-                renderType: Text.NativeRendering
-            }
-            
-            Behavior on Layout.preferredHeight {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            CopyButton {
+                id: copyButton
+                Layout.alignment: Qt.AlignTop
+                visible: mainText !== "0" && mainText !== "" && mainText !== "Ошибка"
+                textToCopy: mainText
             }
         }
         

@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <set>
+#include <tuple>
 
 
 ContinuedFraction::ContinuedFraction() 
@@ -52,7 +53,7 @@ ContinuedFraction ContinuedFraction::FROM_Q_CF(const Rational& rational) {
         
         // p = q, q = остаток
         p = Integer(q.as_string());
-        q = Natural(remainder.ABS_Z_N().as_string());
+        q = remainder.ABS_Z_N();
     }
     
     return ContinuedFraction(coeffs);
@@ -221,29 +222,50 @@ Rational ContinuedFraction::APPROX_CF_Q(const Natural& max_denominator) const {
 
 // CF-6 | Сравнение двух цепных дробей
 int ContinuedFraction::COM_CF_D(const ContinuedFraction& other) const {
-    size_t min_len = std::min(coefficients_.size(), other.coefficients_.size());
+    // нормализация: убираем завершающие 1 ([..., a, 1] -> [..., a+1])
+    auto normalize = [](std::vector<Integer> coeffs) {
+        while (coeffs.size() > 1 && coeffs.back().COM_ZZ_D(Integer("1")) == 0) {
+            coeffs.pop_back();
+            coeffs.back() = coeffs.back().ADD_ZZ_Z(Integer("1"));
+        }
+        return coeffs;
+    };
+    
+    std::vector<Integer> a = (period_start_ < 0) ? normalize(coefficients_) : coefficients_;
+    std::vector<Integer> b = (other.period_start_ < 0) ? normalize(other.coefficients_) : other.coefficients_;
+    
+    size_t min_len = std::min(a.size(), b.size());
     
     for (size_t i = 0; i < min_len; ++i) {
-        int cmp = coefficients_[i].COM_ZZ_D(other.coefficients_[i]);
+        int cmp = a[i].COM_ZZ_D(b[i]);
         if (cmp != 0) {
             // Для чётных позиций: больший коэффициент = большая дробь
             // Для нечётных позиций: больший коэффициент = меньшая дробь
+            // COM_ZZ_D возвращает: 1 если this > other, -1 если this < other
             if (i % 2 == 0) {
-                return (cmp == 2) ? 1 : -1;
+                return cmp;  // на чётной позиции порядок прямой
             } else {
-                return (cmp == 2) ? -1 : 1;
+                return -cmp;  // на нечётной позиции порядок обратный
             }
         }
     }
     
-    if (coefficients_.size() == other.coefficients_.size()) {
+    if (a.size() == b.size()) {
+        // Для периодических дробей также сравниваем начало периода
+        if (period_start_ >= 0 && other.period_start_ >= 0) {
+            if (period_start_ != other.period_start_) {
+                return (period_start_ < other.period_start_) ? -1 : 1;
+            }
+        }
         return 0;
     }
     
-    if (coefficients_.size() > other.coefficients_.size()) {
-        return (min_len % 2 == 0) ? 1 : -1;
-    } else {
+    // Более короткая дробь эквивалентна дроби с "бесконечностью" на позиции min_len
+    if (a.size() > b.size()) {
         return (min_len % 2 == 0) ? -1 : 1;
+    } else {
+        // other длиннее, this короче (this имеет "∞" на позиции min_len)
+        return (min_len % 2 == 0) ? 1 : -1;
     }
 }
 
@@ -462,6 +484,202 @@ std::vector<Integer> ContinuedFraction::GET_APERIODIC_CF() const {
         aperiodic.push_back(coefficients_[i]);
     }
     return aperiodic;
+}
+
+// CF-13 | Преобразование периодической цепной дроби в квадратичную иррациональность
+// Возвращает (a, D, c) такие что дробь = (a + sqrt(D)) / c
+std::tuple<Integer, Natural, Integer> ContinuedFraction::TO_CF_QUAD() const {
+    // Если дробь не периодическая, возвращаем рациональное число
+    if (!IS_PERIODIC_CF()) {
+        Rational r = TO_CF_Q();
+        return {r.numerator(), Natural("0"), Integer(r.denominator().as_string())};
+    }
+    
+    // Получаем период и непериодическую часть
+    std::vector<Integer> period = GET_PERIOD_CF();
+    std::vector<Integer> aperiodic = GET_APERIODIC_CF();
+    
+    if (period.empty()) {
+        Rational r = TO_CF_Q();
+        return {r.numerator(), Natural("0"), Integer(r.denominator().as_string())};
+    }
+    
+    // Шаг 1: Вычисляем конвергенты периода [b1; b2, ..., bk]
+    // Для уравнения x = (p_k + p_{k-1} * x) / (q_k + q_{k-1} * x)
+    // где x = [b1; b2, ..., bk, x] - чисто периодическая часть
+    
+    Integer p_prev = Integer("1");   // p_{-1} = 1
+    Integer q_prev = Integer("0");   // q_{-1} = 0
+    Integer p_curr = period[0];      // p_0 = b_1
+    Integer q_curr = Integer("1");   // q_0 = 1
+    
+    for (size_t i = 1; i < period.size(); ++i) {
+        Integer p_new = period[i].MUL_ZZ_Z(p_curr).ADD_ZZ_Z(p_prev);
+        Integer q_new = period[i].MUL_ZZ_Z(q_curr).ADD_ZZ_Z(q_prev);
+        
+        p_prev = p_curr;
+        q_prev = q_curr;
+        p_curr = p_new;
+        q_curr = q_new;
+    }
+    
+    // p_k = p_curr, p_{k-1} = p_prev
+    // q_k = q_curr, q_{k-1} = q_prev
+    
+    // Шаг 2: Решаем квадратное уравнение для чисто периодической части
+    // x = [b1; b2, ..., bk, x]
+    // x = b1 + 1/(b2 + 1/(...+ 1/(bk + 1/x)))
+    // Используя конвергенты: x = (p_k * x + p_{k-1}) / (q_k * x + q_{k-1})
+    // => x * (q_k * x + q_{k-1}) = p_k * x + p_{k-1}
+    // => q_k * x^2 + q_{k-1} * x = p_k * x + p_{k-1}
+    // => q_k * x^2 + (q_{k-1} - p_k) * x - p_{k-1} = 0
+    
+    Integer coef_a = q_curr;  // q_k
+    Integer coef_b = q_prev.SUB_ZZ_Z(p_curr);  // q_{k-1} - p_k
+    Integer coef_c = p_prev.MUL_ZM_Z();  // -p_{k-1}
+    
+    // D = b^2 - 4ac = (q_{k-1} - p_k)^2 + 4 * q_k * p_{k-1}
+    Integer b_sq = coef_b.MUL_ZZ_Z(coef_b);
+    Integer four = Integer("4");
+    Integer four_ac = four.MUL_ZZ_Z(coef_a).MUL_ZZ_Z(p_prev);
+    Integer D_int = b_sq.ADD_ZZ_Z(four_ac);
+    
+    // D должен быть неотрицательным
+    if (D_int.SGN_Z_D() < 0) {
+        Rational r = TO_CF_Q();
+        return {r.numerator(), Natural("0"), Integer(r.denominator().as_string())};
+    }
+    
+    Natural D_nat = D_int.ABS_Z_N();
+    
+    // x = (-b + sqrt(D)) / (2a) = (p_k - q_{k-1} + sqrt(D)) / (2 * q_k)
+    Integer x_num = coef_b.MUL_ZM_Z();  // -coef_b = p_k - q_{k-1}
+    Integer x_den = Integer("2").MUL_ZZ_Z(coef_a);  // 2 * q_k
+    
+    // Если нет непериодической части, результат = x
+    if (aperiodic.empty()) {
+        // Нормализуем знак знаменателя
+        if (x_den.SGN_Z_D() < 0) {
+            x_num = x_num.MUL_ZM_Z();
+            x_den = x_den.MUL_ZM_Z();
+        }
+        return {x_num, D_nat, x_den};
+    }
+    
+    // Шаг 3: Учитываем непериодическую часть
+    // result = [a0; a1, ..., a_{m-1}, x]
+    // result = (P_{m-1} * x + P_{m-2}) / (Q_{m-1} * x + Q_{m-2})
+    // где P_i/Q_i - конвергенты непериодической части
+    
+    Integer P_prev = Integer("1");   // P_{-1} = 1
+    Integer Q_prev = Integer("0");   // Q_{-1} = 0
+    Integer P_curr = aperiodic[0];   // P_0 = a_0
+    Integer Q_curr = Integer("1");   // Q_0 = 1
+    
+    for (size_t i = 1; i < aperiodic.size(); ++i) {
+        Integer P_new = aperiodic[i].MUL_ZZ_Z(P_curr).ADD_ZZ_Z(P_prev);
+        Integer Q_new = aperiodic[i].MUL_ZZ_Z(Q_curr).ADD_ZZ_Z(Q_prev);
+        
+        P_prev = P_curr;
+        Q_prev = Q_curr;
+        P_curr = P_new;
+        Q_curr = Q_new;
+    }
+    
+    // P_{m-1} = P_curr, P_{m-2} = P_prev
+    // Q_{m-1} = Q_curr, Q_{m-2} = Q_prev
+    
+    // result = (P_{m-1} * x + P_{m-2}) / (Q_{m-1} * x + Q_{m-2})
+    // где x = (x_num + sqrt(D)) / x_den
+    //
+    // Подставляем:
+    // числитель = P_{m-1} * (x_num + sqrt(D)) / x_den + P_{m-2}
+    //           = (P_{m-1} * x_num + P_{m-2} * x_den + P_{m-1} * sqrt(D)) / x_den
+    //           = (A + B * sqrt(D)) / x_den
+    // где A = P_{m-1} * x_num + P_{m-2} * x_den, B = P_{m-1}
+    //
+    // знаменатель = Q_{m-1} * (x_num + sqrt(D)) / x_den + Q_{m-2}
+    //             = (Q_{m-1} * x_num + Q_{m-2} * x_den + Q_{m-1} * sqrt(D)) / x_den
+    //             = (C + E * sqrt(D)) / x_den
+    // где C = Q_{m-1} * x_num + Q_{m-2} * x_den, E = Q_{m-1}
+    //
+    // result = (A + B * sqrt(D)) / (C + E * sqrt(D))
+    //
+    // Рационализируем знаменатель:
+    // result = (A + B * sqrt(D)) * (C - E * sqrt(D)) / ((C + E * sqrt(D)) * (C - E * sqrt(D)))
+    //        = (A*C - B*E*D + (B*C - A*E) * sqrt(D)) / (C^2 - E^2 * D)
+    
+    Integer A = P_curr.MUL_ZZ_Z(x_num).ADD_ZZ_Z(P_prev.MUL_ZZ_Z(x_den));
+    Integer B = P_curr;
+    Integer C = Q_curr.MUL_ZZ_Z(x_num).ADD_ZZ_Z(Q_prev.MUL_ZZ_Z(x_den));
+    Integer E = Q_curr;
+    
+    // числитель: (A*C - B*E*D) + (B*C - A*E) * sqrt(D)
+    Integer D_as_int = Integer(D_nat.as_string());
+    Integer AC = A.MUL_ZZ_Z(C);
+    Integer BED = B.MUL_ZZ_Z(E).MUL_ZZ_Z(D_as_int);
+    Integer result_const = AC.SUB_ZZ_Z(BED);  // A*C - B*E*D
+    
+    Integer BC = B.MUL_ZZ_Z(C);
+    Integer AE = A.MUL_ZZ_Z(E);
+    Integer result_sqrt_coef = BC.SUB_ZZ_Z(AE);  // B*C - A*E
+    
+    // знаменатель: C^2 - E^2 * D
+    Integer C_sq = C.MUL_ZZ_Z(C);
+    Integer E_sq_D = E.MUL_ZZ_Z(E).MUL_ZZ_Z(D_as_int);
+    Integer result_den = C_sq.SUB_ZZ_Z(E_sq_D);
+    
+    // Результат: (result_const + result_sqrt_coef * sqrt(D)) / result_den
+    
+    // Упрощаем: делим всё на result_sqrt_coef (если он не 0)
+    if (result_sqrt_coef.SGN_Z_D() == 0) {
+        // Нет sqrt(D) в результате - это рациональное число
+        if (result_den.SGN_Z_D() < 0) {
+            result_const = result_const.MUL_ZM_Z();
+            result_den = result_den.MUL_ZM_Z();
+        }
+        // Сокращаем
+        Natural gcd = result_const.ABS_Z_N().GCF_NN_N(result_den.ABS_Z_N());
+        if (gcd.NZER_N_B() && gcd.COM_NN_D(Natural("1")) != 0) {
+            result_const = result_const.DIV_ZZ_Z(Integer(gcd.as_string()));
+            result_den = result_den.DIV_ZZ_Z(Integer(gcd.as_string()));
+        }
+        return {result_const, Natural("0"), result_den};
+    }
+    
+    // Находим НОД всех трёх коэффициентов
+    Natural abs_const = result_const.ABS_Z_N();
+    Natural abs_coef = result_sqrt_coef.ABS_Z_N();
+    Natural abs_den = result_den.ABS_Z_N();
+    
+    Natural gcd = abs_const.GCF_NN_N(abs_coef);
+    gcd = gcd.GCF_NN_N(abs_den);
+    
+    if (gcd.NZER_N_B() && gcd.COM_NN_D(Natural("1")) != 0) {
+        result_const = result_const.DIV_ZZ_Z(Integer(gcd.as_string()));
+        result_sqrt_coef = result_sqrt_coef.DIV_ZZ_Z(Integer(gcd.as_string()));
+        result_den = result_den.DIV_ZZ_Z(Integer(gcd.as_string()));
+    }
+    
+    // Нормализуем знак знаменателя
+    if (result_den.SGN_Z_D() < 0) {
+        result_const = result_const.MUL_ZM_Z();
+        result_sqrt_coef = result_sqrt_coef.MUL_ZM_Z();
+        result_den = result_den.MUL_ZM_Z();
+    }
+    
+    // Если коэффициент при sqrt(D) отрицательный, меняем знаки
+    if (result_sqrt_coef.SGN_Z_D() < 0) {
+        result_const = result_const.MUL_ZM_Z();
+        result_sqrt_coef = result_sqrt_coef.MUL_ZM_Z();
+        result_den = result_den.MUL_ZM_Z();
+    }
+    
+    // D_new = k^2 * D, где k = result_sqrt_coef
+    Natural k_nat = result_sqrt_coef.ABS_Z_N();
+    Natural D_new = k_nat.MUL_NN_N(k_nat).MUL_NN_N(D_nat);
+    
+    return {result_const, D_new, result_den};
 }
 
 // Строковое представление
